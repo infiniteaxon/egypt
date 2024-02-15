@@ -21,10 +21,9 @@ def handle_client(conn, addr):
     print(f"Connected by {addr}")
     try:
         while True:
-            # Receive command from the client
             data = conn.recv(1024).decode('utf-8')
             if not data:
-                break  # No data means the client has closed the connection
+                break
 
             command, *args = data.split()
 
@@ -33,12 +32,11 @@ def handle_client(conn, addr):
                 file_size = int(file_size)
                 file_path = os.path.join(STORAGE_DIR, file_name)
 
-                # Receive the file
                 received_data = b''
                 while len(received_data) < file_size:
-                    chunk = conn.recv(4096)
+                    chunk = conn.recv(min(4096, file_size - len(received_data)))
                     if not chunk:
-                        break  # Connection closed
+                        break
                     received_data += chunk
 
                 server_file_hash = hash_file(received_data)
@@ -59,12 +57,11 @@ def handle_client(conn, addr):
 
                     server_file_hash = hash_file(file_data)
                     file_size = len(file_data)
-
-                    # Send file size and hash first
                     conn.sendall(f"{file_size} {server_file_hash}".encode('utf-8'))
 
-                    # Then send the file content
-                    conn.sendall(file_data)
+                    # Send the file content in chunks
+                    for i in range(0, len(file_data), 4096):
+                        conn.sendall(file_data[i:i+4096])
                 else:
                     conn.sendall(b"File not found.")
 
@@ -80,9 +77,7 @@ def main():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.bind((HOST, PORT))
         s.listen()
-
         print(f"Server listening on {HOST}:{PORT}")
-
         while True:
             conn, addr = s.accept()
             client_thread = threading.Thread(target=handle_client, args=(conn, addr))
