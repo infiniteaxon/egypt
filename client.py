@@ -48,33 +48,48 @@ def upload_file(sock, file_name):
     print(response.decode('utf-8'))
 
 def download_file(sock, file_name):
+    # Request file
     sock.sendall(f"DOWNLOAD {file_name}".encode('utf-8'))
-    file_size_data, server_file_hash = sock.recv(1024).decode('utf-8').split()
-    if file_size_data.isdigit():
-        file_size = int(file_size_data)
-        received_data = b''
+    
+    # Receive the initial response with file size and hash
+    response = sock.recv(1024).decode('utf-8')
+    if not response:
+        print("Server closed the connection.")
+        return
+    response_parts = response.split()
+    if len(response_parts) != 2:
+        print("Invalid response from server.")
+        return
+    
+    file_size, server_file_hash = response_parts
+    file_size = int(file_size)
+    
+    # Start receiving the file
+    received_data = b''
+    try:
         while len(received_data) < file_size:
-            chunk = sock.recv(4096)
+            # Determine how much data we expect to receive
+            bytes_to_receive = min(4096, file_size - len(received_data))
+            chunk = sock.recv(bytes_to_receive)
             if not chunk:
-                # No more data is being sent by the server.
-                break
+                raise Exception("Connection closed by the server.")
             received_data += chunk
-            if len(received_data) >= file_size:
-                # We've received the expected amount of data.
-                break
-
-        local_file_hash = hash_file(received_data)
-        if local_file_hash != server_file_hash:
-            print("File hash mismatch! The file may have been tampered with.")
-            return
-
-        decrypted_data = decrypt_file(received_data)
-        file_path = os.path.join(CLIENT_DIR, file_name)
-        with open(file_path, 'wb') as file:
-            file.write(decrypted_data)
-        print("File downloaded and decrypted successfully.")
-    else:
-        print("File not found on server.")
+    except Exception as e:
+        print(f"Download failed: {e}")
+        return
+    
+    # File reception completed, verify hash
+    local_file_hash = hash_file(received_data)
+    if local_file_hash != server_file_hash:
+        print("File hash mismatch! The file may have been tampered with.")
+        return
+    
+    # Decrypt and save the file
+    decrypted_data = decrypt_file(received_data)
+    file_path = os.path.join(CLIENT_DIR, file_name)
+    with open(file_path, 'wb') as file:
+        file.write(decrypted_data)
+    print("File downloaded and decrypted successfully.")
 
 def main():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
