@@ -49,22 +49,22 @@ def handle_client(conn, addr):
                 else:
                     conn.sendall(b"File hash mismatch, upload failed.")
 
-            elif command == 'DOWNLOAD':
+           elif command == 'DOWNLOAD':
                 file_name = args[0]
                 file_path = os.path.join(STORAGE_DIR, file_name)
-
+            
                 if os.path.exists(file_path):
                     with open(file_path, 'rb') as f:
                         file_data = f.read()
-
+            
                     server_file_hash = hash_file(file_data)
                     file_size = len(file_data)
-
-                    # Send file size and hash first
+                    # Make sure to send the encrypted file size
                     conn.sendall(f"{file_size} {server_file_hash}".encode('utf-8'))
-
+            
                     # Then send the file content
                     conn.sendall(file_data)
+
                 else:
                     conn.sendall(b"File not found.")
 
