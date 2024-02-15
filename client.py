@@ -19,18 +19,16 @@ cipher_suite = Fernet(key)
 # Directory to sync
 CLIENT_DIR = '/home/axon/egypt'
 
-def hash_file(file_path):
+def hash_file(file_data):
     sha256_hash = hashlib.sha256()
-    with open(file_path, 'rb') as f:
-        for byte_block in iter(lambda: f.read(4096), b""):
-            sha256_hash.update(byte_block)
+    sha256_hash.update(file_data)
     return sha256_hash.hexdigest()
 
 def encrypt_file(file_path):
     with open(file_path, 'rb') as file:
         file_data = file.read()
     encrypted_data = cipher_suite.encrypt(file_data)
-    return encrypted_data
+    return encrypted_data, hash_file(encrypted_data)
 
 def decrypt_file(encrypted_data):
     decrypted_data = cipher_suite.decrypt(encrypted_data)
@@ -42,8 +40,7 @@ def upload_file(sock, file_name):
         print("File does not exist.")
         return
 
-    encrypted_data = encrypt_file(file_path)
-    file_hash = hashlib.sha256(encrypted_data).hexdigest()  # Calculate hash on encrypted data
+    encrypted_data, file_hash = encrypt_file(file_path)
     file_size = len(encrypted_data)
     sock.sendall(f"UPLOAD {file_name} {file_size} {file_hash}".encode('utf-8'))
     sock.sendall(encrypted_data)
@@ -62,13 +59,13 @@ def download_file(sock, file_name):
                 break
             received_data += chunk
 
-        decrypted_data = decrypt_file(received_data)
-        file_path = os.path.join(CLIENT_DIR, file_name)
-        local_file_hash = hashlib.sha256(decrypted_data).hexdigest()
+        local_file_hash = hash_file(received_data)
         if local_file_hash != server_file_hash:
             print("File hash mismatch! The file may have been tampered with.")
             return
 
+        decrypted_data = decrypt_file(received_data)
+        file_path = os.path.join(CLIENT_DIR, file_name)
         with open(file_path, 'wb') as file:
             file.write(decrypted_data)
         print("File downloaded and decrypted successfully.")
