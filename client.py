@@ -42,8 +42,8 @@ def upload_file(sock, file_name):
         print("File does not exist.")
         return
 
-    file_hash = hash_file(file_path)
     encrypted_data = encrypt_file(file_path)
+    file_hash = hashlib.sha256(encrypted_data).hexdigest()  # Calculate hash on encrypted data
     file_size = len(encrypted_data)
     sock.sendall(f"UPLOAD {file_name} {file_size} {file_hash}".encode('utf-8'))
     sock.sendall(encrypted_data)
