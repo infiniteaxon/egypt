@@ -56,8 +56,12 @@ def download_file(sock, file_name):
         while len(received_data) < file_size:
             chunk = sock.recv(4096)
             if not chunk:
+                # No more data is being sent by the server.
                 break
             received_data += chunk
+            if len(received_data) >= file_size:
+                # We've received the expected amount of data.
+                break
 
         local_file_hash = hash_file(received_data)
         if local_file_hash != server_file_hash:
