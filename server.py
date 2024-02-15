@@ -12,6 +12,11 @@ STORAGE_DIR = 'egypt_server_storage'
 if not os.path.exists(STORAGE_DIR):
     os.makedirs(STORAGE_DIR)
 
+def hash_file(file_data):
+    sha256_hash = hashlib.sha256()
+    sha256_hash.update(file_data)
+    return sha256_hash.hexdigest()
+
 def handle_client(conn, addr):
     print(f"Connected by {addr}")
     try:
@@ -29,27 +34,19 @@ def handle_client(conn, addr):
                 file_path = os.path.join(STORAGE_DIR, file_name)
 
                 # Receive the file
-                with open(file_path, 'wb') as f:
-                    bytes_read = 0
-                    while bytes_read < file_size:
-                        bytes_to_read = min(4096, file_size - bytes_read)
-                        chunk = conn.recv(bytes_to_read)
-                        if not chunk:
-                            break  # Connection closed
-                        f.write(chunk)
-                        bytes_read += len(chunk)
+                received_data = b''
+                while len(received_data) < file_size:
+                    chunk = conn.recv(4096)
+                    if not chunk:
+                        break  # Connection closed
+                    received_data += chunk
 
-                # Calculate and store the hash of the received file
-                server_file_hash = hashlib.sha256()
-                with open(file_path, 'rb') as file:
-                    for byte_block in iter(lambda: file.read(4096), b""):
-                        server_file_hash.update(byte_block)
-                server_file_hash = server_file_hash.hexdigest()
-
+                server_file_hash = hash_file(received_data)
                 if server_file_hash == client_file_hash:
+                    with open(file_path, 'wb') as f:
+                        f.write(received_data)
                     conn.sendall(b"File uploaded successfully.")
                 else:
-                    os.remove(file_path)  # Remove the file as the hash doesn't match
                     conn.sendall(b"File hash mismatch, upload failed.")
 
             elif command == 'DOWNLOAD':
@@ -57,21 +54,17 @@ def handle_client(conn, addr):
                 file_path = os.path.join(STORAGE_DIR, file_name)
 
                 if os.path.exists(file_path):
-                    # Calculate the hash of the file to be sent
-                    server_file_hash = hashlib.sha256()
-                    with open(file_path, 'rb') as file:
-                        for byte_block in iter(lambda: file.read(4096), b""):
-                            server_file_hash.update(byte_block)
-                    server_file_hash = server_file_hash.hexdigest()
+                    with open(file_path, 'rb') as f:
+                        file_data = f.read()
+
+                    server_file_hash = hash_file(file_data)
+                    file_size = len(file_data)
 
                     # Send file size and hash first
-                    file_size = os.path.getsize(file_path)
                     conn.sendall(f"{file_size} {server_file_hash}".encode('utf-8'))
 
                     # Then send the file content
-                    with open(file_path, 'rb') as f:
-                        while (chunk := f.read(4096)):
-                            conn.sendall(chunk)
+                    conn.sendall(file_data)
                 else:
                     conn.sendall(b"File not found.")
 
