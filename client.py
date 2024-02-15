@@ -12,7 +12,7 @@ SERVER_IP = '0.0.0.0'
 SERVER_PORT = 32603
 
 # Directory to sync
-CLIENT_DIR = 'egypt'
+CLIENT_DIR = '/home/axom/egypt'
 
 # Generate RSA key pair
 private_key = rsa.generate_private_key(
