@@ -110,7 +110,6 @@ def main():
 
         while True:
             print("\nMenu:")
-            print("===============")
             print("1. Upload file")
             print("2. Download file")
             print("3. Exit")
