@@ -4,13 +4,14 @@ import hashlib
 from cryptography.fernet import Fernet
 import base64
 import sys
+import platform
 
 # Server settings
 SERVER_IP = '24.96.47.160'
 SERVER_PORT = 32603
 
 # Encryption password (In practice, use a more secure method for handling keys)
-PASSWORD = str(input("Input password: "))
+PASSWORD = str(input("[!] Input password: "))
 
 # Since the server is just a storage site, we can use a key derived from the password
 key = base64.urlsafe_b64encode(hashlib.sha256(PASSWORD.encode()).digest())
@@ -37,7 +38,7 @@ def decrypt_file(encrypted_data):
 def upload_file(sock, file_name):
     file_path = os.path.join(CLIENT_DIR, file_name)
     if not os.path.exists(file_path):
-        print("File does not exist.")
+        print("[!] File does not exist.")
         return
 
     encrypted_data, file_hash = encrypt_file(file_path)
@@ -54,11 +55,11 @@ def download_file(sock, file_name):
     # Receive the initial response with file size and hash
     response = sock.recv(1024).decode('utf-8')
     if not response:
-        print("Server closed the connection.")
+        print("[-] Server closed the connection.")
         return
     response_parts = response.split()
     if len(response_parts) != 2:
-        print("Invalid response from server.")
+        print("[!] Invalid response from server.")
         return
     
     file_size, server_file_hash = response_parts
@@ -72,16 +73,16 @@ def download_file(sock, file_name):
             bytes_to_receive = min(4096, file_size - len(received_data))
             chunk = sock.recv(bytes_to_receive)
             if not chunk:
-                raise Exception("Connection closed by the server.")
+                raise Exception("[-] Connection closed by the server.")
             received_data += chunk
     except Exception as e:
-        print(f"Download failed: {e}")
+        print(f"[!] Download failed: {e}")
         return
     
     # File reception completed, verify hash
     local_file_hash = hash_file(received_data)
     if local_file_hash != server_file_hash:
-        print("File hash mismatch! The file may have been tampered with.")
+        print("[!] File hash mismatch! The file may have been tampered with.")
         return
     
     # Decrypt and save the file
@@ -89,18 +90,27 @@ def download_file(sock, file_name):
     file_path = os.path.join(CLIENT_DIR, file_name)
     with open(file_path, 'wb') as file:
         file.write(decrypted_data)
-    print("File downloaded and decrypted successfully.")
+    print("[+] File downloaded and decrypted successfully.")
 
+def clear():
+    os_system = platform.system()
+    if os_system == "Windows":
+        os.system('cls')
+        return
+    else:
+        os.system('clear')
+        return
 def main():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         try:
             s.connect((SERVER_IP, SERVER_PORT))
         except Exception as e:
-            print(f"Cannot connect to server: {e}")
+            print(f"[!] Cannot connect to server: {e}")
             sys.exit(1)
 
         while True:
             print("\nMenu:")
+            print("===============")
             print("1. Upload file")
             print("2. Download file")
             print("3. Exit")
