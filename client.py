@@ -7,8 +7,8 @@ import sys
 import platform
 
 # Server settings
-SERVER_IP = '24.96.47.160'
-SERVER_PORT = 32603
+SERVER_IP = 'x.x.x.x'
+SERVER_PORT = xxxxx
 
 # Encryption password (In practice, use a more secure method for handling keys)
 PASSWORD = str(input("[!] Input password: "))
