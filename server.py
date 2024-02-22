@@ -72,6 +72,7 @@ def handle_client(conn, addr):
     except Exception as e:
         print(f"[!] Error handling client {addr}: {e}")
     finally:
+        print(f"[-] Disconnection from {addr}")
         conn.close()
 
 def main():
