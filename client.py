@@ -118,11 +118,14 @@ def main():
             if choice == '1':
                 file_name = input("Enter the name of the file to upload: ")
                 upload_file(s, file_name)
+                clear()
             elif choice == '2':
                 file_name = input("Enter the name of the file to download: ")
                 download_file(s, file_name)
+                clear()
             elif choice == '3':
                 print("Exiting.")
+                clear()
                 break
             else:
                 print("Invalid choice. Please try again.")
