@@ -16,5 +16,5 @@ Client:
 
 ![image](https://github.com/infiniteaxon/egypt/assets/60622650/4d394e43-3f66-416e-84ce-af07fadd572c)
 
-![image](https://github.com/infiniteaxon/egypt/assets/60622650/943c3269-3bbf-45f2-ac8d-1f4123596af5)
+![image](https://github.com/infiniteaxon/egypt/assets/60622650/c8f895fb-5b59-46ce-8507-c0831a25b25d)
 
