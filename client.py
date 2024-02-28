@@ -147,6 +147,7 @@ def main():
                     download_file(ssock, file_name)
                     clear()
                 elif choice == '3':
+                    clear()
                     request_file_list(ssock)
                 elif choice == '4':
                     print("Exiting.")
