@@ -7,6 +7,9 @@ import sys
 import platform
 import ssl
 import time
+from tabulate import tabulate
+import pandas as pd
+from io import StringIO
 
 # Server settings
 SERVER_IP = 'x.x.x.x'
@@ -98,8 +101,13 @@ def request_file_list(socket):
     try:
         socket.sendall("LIST".encode('utf-8'))
         response = socket.recv(4096).decode('utf-8')  # Adjust buffer size as needed
-        print("[*] Files in Storage:")
-        print(response if response.strip() else "[!] No files found in storage.")
+        if response.strip():
+            # Convert the CSV data to a DataFrame
+            df = pd.read_csv(StringIO(response), sep=",")
+            # Format and print the table without lines between rows
+            print(tabulate(df, headers='keys', tablefmt='pipe', showindex=False))
+        else:
+            print("[!] No files found in storage.")
     except Exception as e:
         print(f"[!] Failed to request file list: {e}")
 
