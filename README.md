@@ -11,6 +11,11 @@ Features:
 - List Stored Files
 - Server Logs
 
+Plans:
+- Username/Password Auth
+- Users can only access their own files/shared files
+- Store server logs in seperate file
+
 Images Below:
 
 Server:
