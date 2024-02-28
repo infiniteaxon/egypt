@@ -2,10 +2,14 @@ import socket
 import os
 import threading
 import hashlib
+import ssl
 
 # Server settings
 HOST = '0.0.0.0'  # Listen on all network interfaces
 PORT = 32603       # Port to listen on (non-privileged ports are > 1023)
+# SSL Stuff
+CERTFILE =
+KEYFILE =
 
 # Directory to store received files
 STORAGE_DIR = 'egypt_server_storage'
@@ -88,14 +92,18 @@ def handle_client(conn, addr):
 
 
 def main():
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.bind((HOST, PORT))
-        s.listen()
-        print(f"[*] Server listening on {HOST}:{PORT}")
+    context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+    context.load_cert_chain(CERTFILE, KEYFILE)
+
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
+        server_socket.bind((HOST, PORT))
+        server_socket.listen(5)
+        print(f"[*] Secure server listening on {HOST}:{PORT}")
         while True:
-            conn, addr = s.accept()
-            client_thread = threading.Thread(target=handle_client, args=(conn, addr))
-            client_thread.start()
+            conn, addr = server_socket.accept()
+            sconn = context.wrap_socket(conn, server_side=True)
+            thread = threading.Thread(target=handle_client, args=(sconn, addr))
+            thread.start()
 
 if __name__ == "__main__":
     main()
