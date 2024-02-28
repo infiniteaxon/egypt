@@ -10,7 +10,7 @@ HOST = '0.0.0.0'  # Listen on all network interfaces
 PORT = 32603       # Port to listen on (non-privileged ports are > 1023)
 
 # SSL Stuff
-CERTFILE = 'sever.crt'
+CERTFILE = 'server.crt'
 KEYFILE = 'server.key'
 
 # Directory to store received files
