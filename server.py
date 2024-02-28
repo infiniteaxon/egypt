@@ -104,6 +104,7 @@ def main():
             conn, addr = server_socket.accept()
             sconn = context.wrap_socket(conn, server_side=True)
             thread = threading.Thread(target=handle_client, args=(sconn, addr))
+            thread.setDaemon(True)
             thread.start()
 
 if __name__ == "__main__":
