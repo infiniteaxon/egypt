@@ -4,7 +4,7 @@ This is a CLI tool for remote file storage with E2EE.
 
 Features:
 - SSL Encryption
-- Files Encrypted in Storage
+- Files on Server Encrypted at Rest
 - Multiuser Support via Threading
 - Upload
 - Download
