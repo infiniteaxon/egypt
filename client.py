@@ -6,13 +6,11 @@ import base64
 import sys
 import platform
 import ssl
+import time
 
 # Server settings
 SERVER_IP = 'x.x.x.x'
 SERVER_PORT = xxxxx
-
-# Encryption password (In practice, use a more secure method for handling keys)
-PASSWORD = str(input("[!] Input password: "))
 
 # Since the server is just a storage site, we can use a key derived from the password
 key = base64.urlsafe_b64encode(hashlib.sha256(PASSWORD.encode()).digest())
@@ -103,6 +101,7 @@ def request_file_list(socket):
         print(f"[!] Failed to request file list: {e}")
 
 def clear():
+    time.sleep(1)
     os_system = platform.system()
     if os_system == "Windows":
         os.system('cls')
@@ -112,6 +111,10 @@ def clear():
         return
 
 def main():
+    # Encryption password
+    PASSWORD = str(input("[!] Input password: "))
+    clear()
+    
     context = ssl.create_default_context()
     context.check_hostname = False
     context.verify_mode = ssl.CERT_NONE
@@ -131,13 +134,16 @@ def main():
                 if choice == '1':
                     file_name = input("Enter the filename to upload: ")
                     upload_file(ssock, file_name)
+                    clear()
                 elif choice == '2':
                     file_name = input("Enter the filename to download: ")
                     download_file(ssock, file_name)
+                    clear()
                 elif choice == '3':
                     request_file_list(ssock)
                 elif choice == '4':
                     print("Exiting.")
+                    clear()
                     break
                 else:
                     print("[!] Invalid choice.")
