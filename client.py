@@ -5,6 +5,7 @@ from cryptography.fernet import Fernet
 import base64
 import sys
 import platform
+import ssl
 
 # Server settings
 SERVER_IP = 'x.x.x.x'
@@ -111,38 +112,35 @@ def clear():
         return
 
 def main():
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        try:
-            s.connect((SERVER_IP, SERVER_PORT))
-        except Exception as e:
-            print(f"[!] Cannot connect to server: {e}")
-            sys.exit(1)
+    context = ssl.create_default_context()
+    context.check_hostname = False
+    context.verify_mode = ssl.CERT_NONE
 
-        while True:
-            print("\nMenu:")
-            print("1. Upload file")
-            print("2. Download file")
-            print("3. List files")
-            print("4. Exit")
-            choice = input("Enter your choice: ")
+    with socket.create_connection((SERVER_IP, SERVER_PORT)) as sock:
+        with context.wrap_socket(sock, server_hostname=SERVER_IP) as ssock:
+            print(f"[+] Securely connected to server at {SERVER_IP}:{SERVER_PORT}")
+            
+            while True:
+                print("\nAvailable options:")
+                print("1. Upload file")
+                print("2. Download file")
+                print("3. List files")
+                print("4. Exit")
+                choice = input("Select an option: ")
 
-            if choice == '1':
-                file_name = input("Enter the name of the file to upload: ")
-                upload_file(s, file_name)
-                clear()
-            elif choice == '2':
-                file_name = input("Enter the name of the file to download: ")
-                download_file(s, file_name)
-                clear()
-            elif choice == '2':
-                request_file_list(s)
-                clear()
-            elif choice == '3':
-                print("Exiting.")
-                clear()
-                break
-            else:
-                print("Invalid choice. Please try again.")
+                if choice == '1':
+                    file_name = input("Enter the filename to upload: ")
+                    upload_file(ssock, file_name)
+                elif choice == '2':
+                    file_name = input("Enter the filename to download: ")
+                    download_file(ssock, file_name)
+                elif choice == '3':
+                    request_file_list(ssock)
+                elif choice == '4':
+                    print("Exiting.")
+                    break
+                else:
+                    print("[!] Invalid choice.")
 
 if __name__ == "__main__":
     main()
