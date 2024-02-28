@@ -8,9 +8,10 @@ import time
 # Server settings
 HOST = '0.0.0.0'  # Listen on all network interfaces
 PORT = 32603       # Port to listen on (non-privileged ports are > 1023)
+
 # SSL Stuff
-CERTFILE =
-KEYFILE =
+CERTFILE = 'sever.crt'
+KEYFILE = 'server.key'
 
 # Directory to store received files
 STORAGE_DIR = 'egypt_server_storage'
@@ -103,8 +104,7 @@ def main():
         while True:
             conn, addr = server_socket.accept()
             sconn = context.wrap_socket(conn, server_side=True)
-            thread = threading.Thread(target=handle_client, args=(sconn, addr))
-            thread.setDaemon(True)
+            thread = threading.Thread(target=handle_client, args=(sconn, addr), daemon=True)
             thread.start()
 
 if __name__ == "__main__":
