@@ -73,14 +73,15 @@ def handle_client(conn, addr):
                     conn.sendall(b"[!] File not found.")
 
             elif command == 'LIST':
-                files_found = []
+                # List the file details with CSV
+                files_found = ["Filename,Size (bytes),Created"]
                 for file_name in os.listdir(STORAGE_DIR):
                     file_path = os.path.join(STORAGE_DIR, file_name)
                     file_size = os.path.getsize(file_path)
                     creation_date = time.ctime(os.path.getctime(file_path))
-                    files_found.append(f"{file_name}, Size: {file_size} bytes, Created: {creation_date}")
+                    files_found.append(f"\"{file_name}\",{file_size},\"{creation_date}\"")
 
-                list_results = "\n".join(files_found) if files_found else "No files found in storage."
+                list_results = "\n".join(files_found) if len(files_found) > 1 else "No files found in storage."
                 conn.sendall(list_results.encode('utf-8'))
 
             else:
