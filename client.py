@@ -92,6 +92,15 @@ def download_file(sock, file_name):
         file.write(decrypted_data)
     print("[+] File downloaded and decrypted successfully.")
 
+def request_file_list(socket):
+    try:
+        socket.sendall("LIST".encode('utf-8'))
+        response = socket.recv(4096).decode('utf-8')  # Adjust buffer size as needed
+        print("[*] Files in Storage:")
+        print(response if response.strip() else "[!] No files found in storage.")
+    except Exception as e:
+        print(f"[!] Failed to request file list: {e}")
+
 def clear():
     os_system = platform.system()
     if os_system == "Windows":
@@ -100,6 +109,7 @@ def clear():
     else:
         os.system('clear')
         return
+
 def main():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         try:
@@ -112,7 +122,8 @@ def main():
             print("\nMenu:")
             print("1. Upload file")
             print("2. Download file")
-            print("3. Exit")
+            print("3. List files")
+            print("4. Exit")
             choice = input("Enter your choice: ")
 
             if choice == '1':
@@ -122,6 +133,9 @@ def main():
             elif choice == '2':
                 file_name = input("Enter the name of the file to download: ")
                 download_file(s, file_name)
+                clear()
+            elif choice == '2':
+                request_file_list(s)
                 clear()
             elif choice == '3':
                 print("Exiting.")
