@@ -12,6 +12,9 @@ import time
 SERVER_IP = 'x.x.x.x'
 SERVER_PORT = xxxxx
 
+# Encryption password
+PASSWORD = str(input("[!] Input password: "))
+
 # Since the server is just a storage site, we can use a key derived from the password
 key = base64.urlsafe_b64encode(hashlib.sha256(PASSWORD.encode()).digest())
 cipher_suite = Fernet(key)
@@ -111,10 +114,6 @@ def clear():
         return
 
 def main():
-    # Encryption password
-    PASSWORD = str(input("[!] Input password: "))
-    clear()
-    
     context = ssl.create_default_context()
     context.check_hostname = False
     context.verify_mode = ssl.CERT_NONE
