@@ -16,7 +16,7 @@ Plans:
 - Users can only access their own files/shared files
 - Store server logs in seperate file
 
-Images Below:
+Images Below (Not from latest version):
 
 Server:
 
