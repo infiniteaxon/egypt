@@ -100,11 +100,11 @@ def download_file(sock, file_name):
 def request_file_list(socket):
     try:
         socket.sendall("LIST".encode('utf-8'))
-        response = socket.recv(4096).decode('utf-8')  # Adjust buffer size as needed
+        response = socket.recv(4096).decode('utf-8')
         if response.strip():
             # Convert the CSV data to a DataFrame
             df = pd.read_csv(StringIO(response), sep=",")
-            # Format and print the table without lines between rows
+            # Format and print
             print(tabulate(df, headers='keys', tablefmt='pipe', showindex=False))
         else:
             print("[!] No files found in storage.")
