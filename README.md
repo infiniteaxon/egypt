@@ -3,7 +3,8 @@ Welcome to Egypt!
 This is a CLI tool for remote file storage with E2EE.
 
 Features:
-- SSL Encryption
+- SSL Encryption (You will need to create your own cert and key)
+  - `openssl req -newkey rsa:2048 -nodes -keyout server.key -x509 -days 365 -out server.crt`
 - Files on Server Encrypted at Rest
 - Multiuser Support via Threading
 - Upload
