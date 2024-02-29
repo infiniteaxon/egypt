@@ -40,25 +40,32 @@ def decrypt_file(encrypted_data):
     decrypted_data = cipher_suite.decrypt(encrypted_data)
     return decrypted_data
 
-def upload_file(sock, file_name):
-    file_path = os.path.join(CLIENT_DIR, file_name)
-    if not os.path.exists(file_path):
+def upload_file(ssock, file_name):
+    # Get storage instructions
+    subdirectory = input("Enter the subdirectory for upload (leave blank for root): ").strip()
+    full_path = os.path.join(CLIENT_DIR, file_name)
+    
+    if not os.path.exists(full_path):
         print("[!] File does not exist.")
         return
-
-    encrypted_data, file_hash = encrypt_file(file_path)
+    
+    encrypted_data, file_hash = encrypt_file(full_path)
     file_size = len(encrypted_data)
-    sock.sendall(f"UPLOAD {file_name} {file_size} {file_hash}".encode('utf-8'))
-    sock.sendall(encrypted_data)
-    response = sock.recv(1024)
-    print(response.decode('utf-8'))
+    upload_path = os.path.join(subdirectory, file_name) if subdirectory else file_name
+    command = f"UPLOAD {upload_path} {file_size} {file_hash}"
+    
+    ssock.sendall(command.encode('utf-8'))
+    ssock.sendall(encrypted_data)
+    
+    response = ssock.recv(1024).decode('utf-8')
+    print(response)
 
-def download_file(sock, file_name):
+def download_file(ssock, file_name):
     # Request file
-    sock.sendall(f"DOWNLOAD {file_name}".encode('utf-8'))
+    ssock.sendall(f"DOWNLOAD {file_name}".encode('utf-8'))
     
     # Receive the initial response with file size and hash
-    response = sock.recv(1024).decode('utf-8')
+    response = ssock.recv(1024).decode('utf-8')
     if not response:
         print("[-] Server closed the connection.")
         return
@@ -76,7 +83,7 @@ def download_file(sock, file_name):
         while len(received_data) < file_size:
             # Determine how much data we expect to receive
             bytes_to_receive = min(4096, file_size - len(received_data))
-            chunk = sock.recv(bytes_to_receive)
+            chunk = ssock.recv(bytes_to_receive)
             if not chunk:
                 raise Exception("[-] Connection closed by the server.")
             received_data += chunk
@@ -97,10 +104,10 @@ def download_file(sock, file_name):
         file.write(decrypted_data)
     print("[+] File downloaded and decrypted successfully.")
 
-def request_file_list(socket):
+def request_file_list(ssock):
     try:
-        socket.sendall("LIST".encode('utf-8'))
-        response = socket.recv(4096).decode('utf-8')
+        ssock.sendall("LIST".encode('utf-8'))
+        response = ssock.recv(4096).decode('utf-8')
         if response.strip():
             # Convert the CSV data to a DataFrame
             df = pd.read_csv(StringIO(response), sep=",")
