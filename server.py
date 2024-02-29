@@ -33,7 +33,7 @@ def handle_client(conn, addr):
 
             command, *args = data.split()
 
-            elif command == 'UPLOAD':
+            if command == 'UPLOAD':
                 subdirectory, file_name, file_size, client_file_hash = args
                 file_size = int(file_size)
                 # Join paths can create if not there
