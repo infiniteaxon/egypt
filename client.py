@@ -59,47 +59,43 @@ def upload_file(ssock, file_name):
     response = ssock.recv(1024).decode('utf-8')
     print(response)
 
-def download_file(ssock, file_name):
+def download_file(ssock, file_path):
     # Request file
-    ssock.sendall(f"DOWNLOAD {file_name}".encode('utf-8'))
+    ssock.sendall(f"DOWNLOAD {file_path}".encode('utf-8'))
     
-    # Receive the initial response with file size and hash
+    # Handle server response for file download
     response = ssock.recv(1024).decode('utf-8')
     if not response:
         print("[-] Server closed the connection.")
         return
     response_parts = response.split()
-    if len(response_parts) != 2:
+    if len(response_parts) != 3:  # Expecting size, hash, and possibly subdirectory path
         print("[!] Invalid response from server.")
         return
     
-    file_size, server_file_hash = response_parts
-    file_size = int(file_size)
+    file_size, server_file_hash = int(response_parts[0]), response_parts[1]
     
-    # Start receiving the file
+    # Adjusting local file path to include subdirectory
+    local_file_path = os.path.join(CLIENT_DIR, file_path.replace("/", os.sep))
+    os.makedirs(os.path.dirname(local_file_path), exist_ok=True)
+    
+    # Receive file content
     received_data = b''
-    try:
-        while len(received_data) < file_size:
-            # Determine how much data we expect to receive
-            bytes_to_receive = min(4096, file_size - len(received_data))
-            chunk = ssock.recv(bytes_to_receive)
-            if not chunk:
-                raise Exception("[-] Connection closed by the server.")
-            received_data += chunk
-    except Exception as e:
-        print(f"[!] Download failed: {e}")
-        return
-    
-    # File reception completed, verify hash
-    local_file_hash = hash_file(received_data)
-    if local_file_hash != server_file_hash:
+    while len(received_data) < file_size:
+        chunk = ssock.recv(min(4096, file_size - len(received_data)))
+        if not chunk:
+            print("[-] Connection closed by the server.")
+            return
+        received_data += chunk
+
+    # Verify file hash
+    if hash_file(received_data) != server_file_hash:
         print("[!] File hash mismatch! The file may have been tampered with.")
         return
     
     # Decrypt and save the file
     decrypted_data = decrypt_file(received_data)
-    file_path = os.path.join(CLIENT_DIR, file_name)
-    with open(file_path, 'wb') as file:
+    with open(local_file_path, 'wb') as file:
         file.write(decrypted_data)
     print("[+] File downloaded and decrypted successfully.")
 
