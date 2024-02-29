@@ -14,7 +14,7 @@ Features:
 
 Plans:
 - Username/Password Auth
-- Users can only access their own files/shared files
+- Allow creation of, and storage in seperate Files under /egypt/
 - Store server logs in seperate file
 
 Images Below (Not from latest version):
