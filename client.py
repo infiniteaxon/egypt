@@ -60,6 +60,8 @@ def upload_file(ssock, file_name):
     print(response)
 
 def download_file(ssock, file_path):
+    request_file_list(ssock)
+    time.sleep(2)
     # Request file
     ssock.sendall(f"DOWNLOAD {file_path}".encode('utf-8'))
     
@@ -114,7 +116,7 @@ def request_file_list(ssock):
         print(f"[!] Failed to request file list: {e}")
 
 def clear():
-    time.sleep(1)
+    time.sleep(2)
     os_system = platform.system()
     if os_system == "Windows":
         os.system('cls')
