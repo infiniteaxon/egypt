@@ -38,7 +38,7 @@ def handle_client(conn, addr):
                 file_size = int(file_size)
                 # Join paths can create if not there
                 directory_path = os.path.join(STORAGE_DIR, subdirectory)
-                os.makedirs(directory_path. exist_ok=True)
+                os.makedirs(directory_path, exist_ok=True)
                 file_path = os.path.join(directory_path, file_name)
                 file_exists = os.path.exists(file_path)
             
