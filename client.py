@@ -42,7 +42,7 @@ def decrypt_file(encrypted_data):
 
 def upload_file(ssock, file_name):
     # Get storage instructions
-    subdirectory = input("Enter the subdirectory for upload (leave blank for root): ").strip()
+    directory = input("Enter the subdirectory for upload (leave blank for root): ").strip()
     full_path = os.path.join(CLIENT_DIR, file_name)
     
     if not os.path.exists(full_path):
@@ -51,8 +51,7 @@ def upload_file(ssock, file_name):
     
     encrypted_data, file_hash = encrypt_file(full_path)
     file_size = len(encrypted_data)
-    upload_path = os.path.join(subdirectory, file_name) if subdirectory else file_name
-    command = f"UPLOAD {upload_path} {file_size} {file_hash}"
+    command = f"UPLOAD {directory} {file_name} {file_size} {file_hash}"
     
     ssock.sendall(command.encode('utf-8'))
     ssock.sendall(encrypted_data)
