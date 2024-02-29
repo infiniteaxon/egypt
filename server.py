@@ -74,14 +74,7 @@ def handle_client(conn, addr):
 
             elif command == 'LIST':
                 # List the file details with CSV
-                files_found = ["Filename,Size (bytes),Created"]
-                for file_name in os.listdir(STORAGE_DIR):
-                    file_path = os.path.join(STORAGE_DIR, file_name)
-                    file_size = os.path.getsize(file_path)
-                    creation_date = time.ctime(os.path.getctime(file_path))
-                    files_found.append(f"\"{file_name}\",{file_size},\"{creation_date}\"")
-
-                list_results = "\n".join(files_found) if len(files_found) > 1 else "No files found in storage."
+                list_results = list_files(STORAGE_DIR)
                 conn.sendall(list_results.encode('utf-8'))
 
             else:
@@ -93,6 +86,16 @@ def handle_client(conn, addr):
         print(f"[-] Disconnection from {addr}")
         conn.close()
 
+def list_files(startpath):
+    files_found = ["Filename,Size (bytes),Created"]
+    for root, dirs, files in os.walk(startpath):
+        for file in files:
+            file_path = os.path.join(root, file)
+            relative_path = os.path.relpath(file_path, startpath)
+            file_size = os.path.getsize(file_path)
+            creation_date = time.ctime(os.path.getctime(file_path))
+            files_found.append(f"\"{relative_path}\",{file_size},\"{creation_date}\"")
+    return "\n".join(files_found) if len(files_found) > 1 else "No files found in storage."
 
 def main():
     context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
