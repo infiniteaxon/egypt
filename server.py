@@ -33,23 +33,34 @@ def handle_client(conn, addr):
 
             command, *args = data.split()
 
-            if command == 'UPLOAD':
-                file_name, file_size, client_file_hash = args
+            elif command =='UPLOAD':
+                subdirectort, file_name, file_size, client_file_hash = args
                 file_size = int(file_size)
-                file_path = os.path.join(STORAGE_DIR, file_name)
+                # Join paths can create if not there
+                directory_path = os.path.join(STORAGE_DIR, subdirectory)
+                os.makedirs(directory_path. exist_ok=True)
+                file_path = os.path.join(directory_path, file_name)
+                file_exists = os.path.exists(file_path)
+            
+                # Handle upload data
                 received_data = b''
                 print(f"[*] Upload from {addr}")
+                # Set data size expectation
                 while len(received_data) < file_size:
                     chunk = conn.recv(min(4096, file_size - len(received_data)))
                     if not chunk:
                         break
                     received_data += chunk
-
+                # Check hash for integrity
                 server_file_hash = hash_file(received_data)
                 if server_file_hash == client_file_hash:
                     with open(file_path, 'wb') as f:
                         f.write(received_data)
-                    conn.sendall(b"[*] File uploaded successfully.")
+                    # Send responses
+                    if not file_exists_before:
+                        conn.sendall(b"[*] New file created and uploaded successfully.")
+                    else:
+                        conn.sendall(b"[*] File overwritten successfully.")
                 else:
                     conn.sendall(b"[!] File hash mismatch, upload failed.")
 
@@ -58,6 +69,7 @@ def handle_client(conn, addr):
                 file_path = os.path.join(STORAGE_DIR, file_name)
                 print(f"[*] Download to {addr}")
 
+                # Get download data
                 if os.path.exists(file_path):
                     with open(file_path, 'rb') as f:
                         file_data = f.read()
