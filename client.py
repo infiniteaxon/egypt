@@ -60,7 +60,6 @@ def upload_file(ssock, file_name):
     print(response)
 
 def download_file(ssock, file_path):
-    request_file_list(ssock)
     time.sleep(2)
     # Request file
     ssock.sendall(f"DOWNLOAD {file_path}".encode('utf-8'))
@@ -147,7 +146,8 @@ def main():
                     upload_file(ssock, file_name)
                     clear()
                 elif choice == '2':
-                    file_name = input("Enter the filename to download: ")
+                    request_file_list(ssock)
+                    file_name = input("\nEnter the filename to download: ")
                     download_file(ssock, file_name)
                     clear()
                 elif choice == '3':
