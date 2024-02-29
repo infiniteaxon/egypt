@@ -34,7 +34,7 @@ def handle_client(conn, addr):
             command, *args = data.split()
 
             elif command == 'UPLOAD':
-                subdirectort, file_name, file_size, client_file_hash = args
+                subdirectory, file_name, file_size, client_file_hash = args
                 file_size = int(file_size)
                 # Join paths can create if not there
                 directory_path = os.path.join(STORAGE_DIR, subdirectory)
@@ -57,7 +57,7 @@ def handle_client(conn, addr):
                     with open(file_path, 'wb') as f:
                         f.write(received_data)
                     # Send responses
-                    if not file_exists_before:
+                    if not file_exists:
                         conn.sendall(b"[*] New file created and uploaded successfully.")
                     else:
                         conn.sendall(b"[*] File overwritten successfully.")
