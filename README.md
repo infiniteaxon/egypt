@@ -20,14 +20,18 @@ Plans:
 Images Below (Not from latest version):
 
 Server:
+- Logs
+![image](https://github.com/infiniteaxon/egypt/assets/60622650/dfa94f59-70dd-4e7d-ba3f-4a3ea564f9fb)
 
-![image](https://github.com/infiniteaxon/egypt/assets/60622650/9df5330f-5c38-4557-84fb-9ac7aea34ebd)
+- File at rest
+![image](https://github.com/infiniteaxon/egypt/assets/60622650/b48e3570-d11e-4425-9940-b60019d6ca56)
 
-![image](https://github.com/infiniteaxon/egypt/assets/60622650/a880a987-7676-4320-9444-fd08b1a4f650)
 
 Client:
+- Interface
+![image](https://github.com/infiniteaxon/egypt/assets/60622650/39cfbc67-e6d8-4a25-ac2f-3782b8151999)
 
-![image](https://github.com/infiniteaxon/egypt/assets/60622650/4d394e43-3f66-416e-84ce-af07fadd572c)
+- File from download
+![image](https://github.com/infiniteaxon/egypt/assets/60622650/4d7526a4-0da0-47c5-b6ba-b6ab6d2cd186)
 
-![image](https://github.com/infiniteaxon/egypt/assets/60622650/c8f895fb-5b59-46ce-8507-c0831a25b25d)
 
