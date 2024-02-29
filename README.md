@@ -10,14 +10,16 @@ Features:
 - Upload
 - Download
 - List Stored Files
+- Allow Subdirectory Creation and Storage
 - Server Logs
 
 Plans:
 - Username/Password Auth
-- Allow creation of, and storage in seperate Files under /egypt/
 - Store server logs in seperate file
 
-Images Below (Not from latest version):
+
+
+**Images Below (Not from latest version):**
 
 Server:
 - Logs
