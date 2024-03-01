@@ -35,9 +35,11 @@ def handle_client(conn, addr):
 
             if command == 'UPLOAD':
                 subdirectory, file_name, file_size, client_file_hash = args
+                file_size = int(file_size)  # Ensure file_size is an integer
                 subdirectory_path = os.path.normpath(subdirectory)
+                file_path = os.path.join(STORAGE_DIR, subdirectory_path, file_name)
 
-                # Validate the subdirectory to prevent directory traversal
+                # Validate directory and create if necessary
                 if ".." in subdirectory_path.split(os.sep) or not subdirectory_path.startswith('egypt_server_storage'):
                     conn.sendall(b"[!] Restricted directory submitted, upload failed.")
                 else:
@@ -51,15 +53,25 @@ def handle_client(conn, addr):
                     os.makedirs(directory_path, exist_ok=True)  
                     file_path = os.path.join(directory_path, file_name)
             
-                # Handle upload data
                 received_data = b''
-                print(f"[*] Upload from {addr}")
-                # Set data size expectation
-                while len(received_data) < file_size:
-                    chunk = conn.recv(min(4096, file_size - len(received_data)))
+                received_size = 0
+
+                while received_size < file_size:
+                    chunk = conn.recv(min(4096, file_size - received_size))
                     if not chunk:
                         break
                     received_data += chunk
+                    received_size += len(chunk)
+
+                    # Send status updates
+                    if received_size >= file_size * 0.25:
+                        conn.sendall(b"...25%")
+                    if received_size >= file_size * 0.50:
+                        conn.sendall(b"...50%")
+                    if received_size >= file_size * 0.75:
+                        conn.sendall(b"...75%")
+                    if received_size == file_size:
+                        conn.sendall(b"...100% of the file received, verifying integrity...")
                 # Check hash for integrity
                 server_file_hash = hash_file(received_data)
                 if server_file_hash == client_file_hash:
