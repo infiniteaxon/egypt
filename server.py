@@ -33,27 +33,23 @@ def handle_client(conn, addr):
 
             command, *args = data.split()
 
-                if command == 'UPLOAD':
-                    subdirectory, file_name, file_size, client_file_hash = args
-                    # Normalize and validate the subdirectory given
+            if command == 'UPLOAD':
+                subdirectory, file_name, file_size, client_file_hash = args
                 subdirectory_path = os.path.normpath(subdirectory)
+
+                # Validate the subdirectory to prevent directory traversal
                 if ".." in subdirectory_path.split(os.sep) or not subdirectory_path.startswith('egypt_server_storage'):
                     conn.sendall(b"[!] Restricted directory submitted, upload failed.")
-                    break
-
-                file_size = int(file_size)
-                directory_path = os.path.join(STORAGE_DIR, subdirectory_path)
-    
-                # Prevent directory traversal
+                else:
+                    directory_path = os.path.join(STORAGE_DIR, subdirectory_path)
+            
+                # Check if the real path after normalization is within the allowed STORAGE_DIR
                 if not os.path.realpath(directory_path).startswith(os.path.realpath(STORAGE_DIR)):
                     conn.sendall(b"[!] Invalid directory path, upload failed.")
-                    break
-                file_size = int(file_size)
-                # Join paths can create if not there
-                directory_path = os.path.join(STORAGE_DIR, subdirectory)
-                os.makedirs(directory_path, exist_ok=True)
-                file_path = os.path.join(directory_path, file_name)
-                file_exists = os.path.exists(file_path)
+                else:
+                    # Create the directory if it doesn't exist
+                    os.makedirs(directory_path, exist_ok=True)  
+                    file_path = os.path.join(directory_path, file_name)
             
                 # Handle upload data
                 received_data = b''
