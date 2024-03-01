@@ -74,6 +74,15 @@ def handle_client(conn, addr):
                     conn.sendall(b"[!] File hash mismatch, upload failed.")
 
             elif command == 'DOWNLOAD':
+                if ".." in subdirectory_path.split(os.sep) or not subdirectory_path.startswith('egypt_server_storage'):
+                    conn.sendall(b"[!] Restricted directory requested, download failed.")
+                else:
+                    directory_path = os.path.join(STORAGE_DIR, subdirectory_path)
+            
+                # Check if the real path after normalization is within the allowed STORAGE_DIR
+                if not os.path.realpath(directory_path).startswith(os.path.realpath(STORAGE_DIR)):
+                    conn.sendall(b"[!] Invalid directory path, download failed.")
+                
                 file_name = args[0]
                 file_path = os.path.join(STORAGE_DIR, file_name)
                 print(f"[*] Download to {addr}")
