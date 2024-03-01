@@ -50,8 +50,7 @@ def handle_client(conn, addr):
                     conn.sendall(b"[!] Invalid directory path, upload failed.")
                 else:
                     # Create the directory if it doesn't exist
-                    os.makedirs(directory_path, exist_ok=True)  
-                    file_path = os.path.join(directory_path, file_name)
+                    os.makedirs(directory_path, exist_ok=True) 
             
                 received_data = b''
                 received_size = 0
@@ -63,21 +62,13 @@ def handle_client(conn, addr):
                     received_data += chunk
                     received_size += len(chunk)
 
-                    # Send status updates
-                    if received_size >= file_size * 0.25:
-                        conn.sendall(b"...25%")
-                    if received_size >= file_size * 0.50:
-                        conn.sendall(b"...50%")
-                    if received_size >= file_size * 0.75:
-                        conn.sendall(b"...75%")
-                    if received_size == file_size:
-                        conn.sendall(b"...100% of the file received, verifying integrity...")
                 # Check hash for integrity
                 server_file_hash = hash_file(received_data)
                 if server_file_hash == client_file_hash:
                     with open(file_path, 'wb') as f:
                         f.write(received_data)
                     # Send responses
+                    file_exists = os.path.exists(file_path)
                     if not file_exists:
                         conn.sendall(b"[*] New file created and uploaded successfully.")
                     else:
