@@ -33,8 +33,21 @@ def handle_client(conn, addr):
 
             command, *args = data.split()
 
-            if command == 'UPLOAD':
-                subdirectory, file_name, file_size, client_file_hash = args
+                if command == 'UPLOAD':
+                    subdirectory, file_name, file_size, client_file_hash = args
+                    # Normalize and validate the subdirectory given
+                subdirectory_path = os.path.normpath(subdirectory)
+                if ".." in subdirectory_path.split(os.sep) or not subdirectory_path.startswith('egypt_server_storage'):
+                    conn.sendall(b"[!] Restricted directory submitted, upload failed.")
+                    break
+
+                file_size = int(file_size)
+                directory_path = os.path.join(STORAGE_DIR, subdirectory_path)
+    
+                # Prevent directory traversal
+                if not os.path.realpath(directory_path).startswith(os.path.realpath(STORAGE_DIR)):
+                    conn.sendall(b"[!] Invalid directory path, upload failed.")
+                    break
                 file_size = int(file_size)
                 # Join paths can create if not there
                 directory_path = os.path.join(STORAGE_DIR, subdirectory)
