@@ -11,10 +11,10 @@ Features:
 - Download
 - List Stored Files
 - Allow Subdirectory Creation and Storage
-- Server Logs
+- Server Log
+- Username / Password Auth
 
 Plans:
-- Username/Password Auth
 - Store server logs in seperate file
 
 
