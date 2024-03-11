@@ -13,6 +13,9 @@ PORT = 32603       # Port to listen on (non-privileged ports are > 1023)
 CERTFILE = 'server.crt'
 KEYFILE = 'server.key'
 
+# User/Password Dictionary
+creds = {"axon": "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"}
+
 # Directory to store received files
 STORAGE_DIR = 'egypt_server_storage'
 if not os.path.exists(STORAGE_DIR):
@@ -25,6 +28,11 @@ def hash_file(file_data):
 
 def handle_client(conn, addr):
     print(f"[+] Connection from {addr}")
+    
+    if not login(conn, addr):
+        conn.close()
+        return
+
     try:
         while True:
             data = conn.recv(1024).decode('utf-8')
@@ -130,10 +138,28 @@ def list_files(startpath):
             files_found.append(f"\"{relative_path}\",{file_size},\"{creation_date}\"")
     return "\n".join(files_found) if len(files_found) > 1 else "No files found in storage."
 
+def login(conn, addr):
+    try:
+        credentials = conn.recv(4096).decode('utf-8')
+        if not credentials:
+            print(f"[!] Invalid client submission.")
+        username, password_hash = credentials.split(' ')
+        
+        if username in creds and creds[username] == password_hash:
+            print(f"[+] {username}@{addr} authenticated successfully.")
+            conn.sendall(b"[+] Login successful.")
+            return True
+        else:
+            print(f"[!] Authentication failed for {username}@{addr}.")
+            conn.sendall(b"[!] Login failed.")
+    except Exception as e:
+        print(f"[!] Error handling login from {addr}: {e}")
+        conn.sendall(b"[!] Login error.")
+    return False
+
 def main():
     context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-    context.load_cert_chain(CERTFILE, KEYFILE)
-
+    context.load_cert_chain(certfile=CERTFILE, keyfile=KEYFILE)
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
         server_socket.bind((HOST, PORT))
         server_socket.listen(5)
@@ -141,8 +167,7 @@ def main():
         while True:
             conn, addr = server_socket.accept()
             sconn = context.wrap_socket(conn, server_side=True)
-            thread = threading.Thread(target=handle_client, args=(sconn, addr), daemon=True)
-            thread.start()
+            threading.Thread(target=handle_client, args=(sconn, addr)).start()
 
 if __name__ == "__main__":
     main()
