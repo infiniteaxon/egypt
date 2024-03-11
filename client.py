@@ -10,16 +10,17 @@ import time
 from tabulate import tabulate
 import pandas as pd
 from io import StringIO
+import getpass
 
 # Server settings
 SERVER_IP = 'x.x.x.x'
 SERVER_PORT = xxxxx
 
 # Encryption password
-PASSWORD = str(input("[!] Input password: "))
+ENC_PASSWORD = getpass.getpass("[!] Input encryption password: ")
 
 # Since the server is just a storage site, we can use a key derived from the password
-key = base64.urlsafe_b64encode(hashlib.sha256(PASSWORD.encode()).digest())
+key = base64.urlsafe_b64encode(hashlib.sha256(ENC_PASSWORD.encode()).digest())
 cipher_suite = Fernet(key)
 
 # Directory to sync
@@ -60,7 +61,6 @@ def upload_file(ssock, file_name):
     print(response)
 
 def download_file(ssock, file_path):
-    time.sleep(2)
     # Request file
     ssock.sendall(f"DOWNLOAD {file_path}".encode('utf-8'))
     
@@ -124,6 +124,23 @@ def clear():
         os.system('clear')
         return
 
+def hash_password(password):
+    return hashlib.sha256(password.encode()).hexdigest()
+
+def login(ssock):
+    username = input("Username: ")
+    password = getpass.getpass("Password: ")  # Password input is now hidden
+    password_hash = hash_password(password)
+    credentials = f"{username} {password_hash}".encode('utf-8')
+    ssock.sendall(credentials)
+    
+    response = ssock.recv(4096).decode('utf-8')
+    print(response)
+    if "Login successful" in response:
+        return True
+    else:
+        return False
+
 def main():
     context = ssl.create_default_context()
     context.check_hostname = False
@@ -133,6 +150,8 @@ def main():
         with context.wrap_socket(sock, server_hostname=SERVER_IP) as ssock:
             print(f"[+] Securely connected to server at {SERVER_IP}:{SERVER_PORT}")
             
+            login(ssock)
+
             while True:
                 print("\nAvailable options:")
                 print("1. Upload file")
