@@ -68,6 +68,7 @@ def handle_client(conn, addr):
                     file_name, file_size, client_file_hash = args
                     subdirectory_path = STORAGE_DIR
                 elif len(args) == 4:
+                    subdirectory = ''
                     subdirectory, file_name, file_size, client_file_hash = args
                     subdirectory_path = os.path.normpath(subdirectory)
                 
