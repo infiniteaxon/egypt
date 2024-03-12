@@ -64,13 +64,13 @@ def handle_client(conn, addr):
             command, *args = data.split()
 
             if command == 'UPLOAD':
+                subdirectory_path = STORAGE_DIR
+                
                 if len(args) == 3:
                     file_name, file_size, client_file_hash = args
-                    subdirectory_path = STORAGE_DIR
                 elif len(args) == 4:
-                    subdirectory = ''
                     subdirectory, file_name, file_size, client_file_hash = args
-                    subdirectory_path = os.path.normpath(subdirectory)
+                    subdirectory_path = os.path.normpath(os.path.join(STORAGE_DIR, subdirectory))
                 
                 file_size = int(file_size)  # Ensure file_size is an integer
                 file_path = os.path.join(STORAGE_DIR, subdirectory_path, file_name)
