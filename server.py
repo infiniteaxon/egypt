@@ -174,7 +174,6 @@ def list_files(startpath):
     return "\n".join(files_found) if len(files_found) > 1 else "No files found in storage."
 
 def login(conn, addr):
-    username = ""
     global username
     try:
         credentials = conn.recv(4096).decode('utf-8')
