@@ -151,7 +151,7 @@ def handle_client(conn, addr):
             elif command == 'LIST':
                 list_results = list_files(STORAGE_DIR)
                 conn.sendall(list_results.encode('utf-8'))
-                logger.info(f"File list requested from {username}@{addr}")
+                logger.info(f"[*] File list requested from {username}@{addr}")
 
             else:
                 conn.sendall(b"[!] Invalid command.")
