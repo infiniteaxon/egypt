@@ -13,9 +13,10 @@ Features:
 - Allow Subdirectory Creation and Storage
 - Server Log
 - Username / Password Auth
+- Store server logs in seperate file
 
 Plans:
-- Store server logs in seperate file
+- ???
 
 
 
