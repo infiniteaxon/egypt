@@ -24,7 +24,8 @@ Plans:
 Server:
 - Logs
 
-![image](https://github.com/infiniteaxon/egypt/assets/60622650/dfa94f59-70dd-4e7d-ba3f-4a3ea564f9fb)
+![image](https://github.com/infiniteaxon/egypt/assets/60622650/42294af5-0b62-4ada-87ef-69499fe46755)
+
 
 - File at rest
 
