@@ -187,7 +187,7 @@ def main():
         while True:
             conn, addr = server_socket.accept()
             sconn = context.wrap_socket(conn, server_side=True)
-            threading.Thread(target=handle_client, args=(sconn, addr)).start()
+            threading.Thread(target=handle_client, args=(sconn, addr), daemon=True).start()
 
 if __name__ == "__main__":
     main()
