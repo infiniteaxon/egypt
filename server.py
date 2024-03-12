@@ -115,7 +115,7 @@ def handle_client(conn, addr):
             elif command == 'DOWNLOAD':
                 
                 file_name = args[0]
-                file_path = os.path.join(STORAGE_DIR, file_name)
+                subdirectory_path = os.path.join(STORAGE_DIR, file_name)
                 
                 # Input validation
                 if ".." in subdirectory_path.split(os.sep) or not subdirectory_path.startswith('egypt_server_storage'):
