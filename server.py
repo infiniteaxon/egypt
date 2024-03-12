@@ -4,6 +4,7 @@ import threading
 import hashlib
 import ssl
 import time
+import logging
 
 # Server settings
 HOST = '0.0.0.0'  # Listen on all network interfaces
@@ -21,13 +22,32 @@ STORAGE_DIR = 'egypt_server_storage'
 if not os.path.exists(STORAGE_DIR):
     os.makedirs(STORAGE_DIR)
 
+# Configure logger
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+# Create handlers for writing to file and logging to console
+file_handler = logging.FileHandler('server.log')
+console_handler = logging.StreamHandler()
+
+# Format logs
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+file_handler.setFormatter(formatter)
+console_handler.setFormatter(formatter)
+
+# Add handlers to the logger
+logger.addHandler(file_handler)
+logger.addHandler(console_handler)
+
+
+
 def hash_file(file_data):
     sha256_hash = hashlib.sha256()
     sha256_hash.update(file_data)
     return sha256_hash.hexdigest()
 
 def handle_client(conn, addr):
-    print(f"[+] Connection from {addr}")
+    logging.info(f"[+] Connection from {addr}")
     
     if not login(conn, addr):
         conn.close()
@@ -96,7 +116,7 @@ def handle_client(conn, addr):
                 
                 file_name = args[0]
                 file_path = os.path.join(STORAGE_DIR, file_name)
-                print(f"[*] Download to {addr}")
+                logging.info(f"[*] Download to {addr}")
 
                 # Get download data
                 if os.path.exists(file_path):
@@ -122,9 +142,9 @@ def handle_client(conn, addr):
                 conn.sendall(b"[!] Invalid command.")
 
     except Exception as e:
-        print(f"[!] Error handling client {addr}: {e}")
+        logging.error(f"[!] Error handling client {addr}: {e}")
     finally:
-        print(f"[-] Disconnection from {addr}")
+        logging.info(f"[-] Disconnection from {addr}")
         conn.close()
 
 def list_files(startpath):
@@ -142,18 +162,18 @@ def login(conn, addr):
     try:
         credentials = conn.recv(4096).decode('utf-8')
         if not credentials:
-            print(f"[!] Invalid client submission.")
+            logging.warning(f"[!] Invalid client submission.")
         username, password_hash = credentials.split(' ')
         
         if username in creds and creds[username] == password_hash:
-            print(f"[+] {username}@{addr} authenticated successfully.")
+            logging.info(f"[+] {username}@{addr} authenticated successfully.")
             conn.sendall(b"[+] Login successful.")
             return True
         else:
-            print(f"[!] Authentication failed for {username}@{addr}.")
+            logging.warning(f"[!] Authentication failed for {username}@{addr}.")
             conn.sendall(b"[!] Login failed.")
     except Exception as e:
-        print(f"[!] Error handling login from {addr}: {e}")
+        logging.error(f"[!] Error handling login from {addr}: {e}")
         conn.sendall(b"[!] Login error.")
     return False
 
@@ -163,7 +183,7 @@ def main():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
         server_socket.bind((HOST, PORT))
         server_socket.listen(5)
-        print(f"[*] Secure server listening on {HOST}:{PORT}")
+        logging.info(f"[*] Secure server listening on {HOST}:{PORT}")
         while True:
             conn, addr = server_socket.accept()
             sconn = context.wrap_socket(conn, server_side=True)
