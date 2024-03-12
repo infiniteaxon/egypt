@@ -24,11 +24,13 @@ if not os.path.exists(STORAGE_DIR):
 
 # Configure logger
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 # Create handlers for writing to file and logging to console
 file_handler = logging.FileHandler('server.log')
+file_handler.setLevel(logging.DEBUG)
 console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.DEBUG)
 
 # Format logs
 formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
@@ -47,7 +49,7 @@ def hash_file(file_data):
     return sha256_hash.hexdigest()
 
 def handle_client(conn, addr):
-    logging.info(f"[+] Connection from {addr}")
+    logger.info(f"[+] Connection from {addr}")
     
     if not login(conn, addr):
         conn.close()
@@ -116,7 +118,7 @@ def handle_client(conn, addr):
                 
                 file_name = args[0]
                 file_path = os.path.join(STORAGE_DIR, file_name)
-                logging.info(f"[*] Download to {addr}")
+                logger.info(f"[*] Download to {addr}")
 
                 # Get download data
                 if os.path.exists(file_path):
@@ -142,9 +144,9 @@ def handle_client(conn, addr):
                 conn.sendall(b"[!] Invalid command.")
 
     except Exception as e:
-        logging.error(f"[!] Error handling client {addr}: {e}")
+        logger.error(f"[!] Error handling client {addr}: {e}")
     finally:
-        logging.info(f"[-] Disconnection from {addr}")
+        logger.info(f"[-] Disconnection from {addr}")
         conn.close()
 
 def list_files(startpath):
@@ -162,18 +164,18 @@ def login(conn, addr):
     try:
         credentials = conn.recv(4096).decode('utf-8')
         if not credentials:
-            logging.warning(f"[!] Invalid client submission.")
+            logger.warning(f"[!] Invalid client submission.")
         username, password_hash = credentials.split(' ')
         
         if username in creds and creds[username] == password_hash:
-            logging.info(f"[+] {username}@{addr} authenticated successfully.")
+            logger.info(f"[+] {username}@{addr} authenticated successfully.")
             conn.sendall(b"[+] Login successful.")
             return True
         else:
-            logging.warning(f"[!] Authentication failed for {username}@{addr}.")
+            logger.warning(f"[!] Authentication failed for {username}@{addr}.")
             conn.sendall(b"[!] Login failed.")
     except Exception as e:
-        logging.error(f"[!] Error handling login from {addr}: {e}")
+        logger.error(f"[!] Error handling login from {addr}: {e}")
         conn.sendall(b"[!] Login error.")
     return False
 
@@ -183,7 +185,7 @@ def main():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
         server_socket.bind((HOST, PORT))
         server_socket.listen(5)
-        logging.info(f"[*] Secure server listening on {HOST}:{PORT}")
+        logger.info(f"[*] Secure server listening on {HOST}:{PORT}")
         while True:
             conn, addr = server_socket.accept()
             sconn = context.wrap_socket(conn, server_side=True)
