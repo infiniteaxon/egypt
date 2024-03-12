@@ -72,12 +72,14 @@ def handle_client(conn, addr):
                 # Validate directory and create if necessary
                 if ".." in subdirectory_path.split(os.sep) or not subdirectory_path.startswith('egypt_server_storage'):
                     conn.sendall(b"[!] Restricted directory submitted, upload failed.")
+                    logger.warning(f"[!] Restricted directory '{subdirectory_path}' submitted from {user}@{addr}.")
                 else:
                     directory_path = os.path.join(STORAGE_DIR, subdirectory_path)
             
                 # Check if the real path after normalization is within the allowed STORAGE_DIR
                 if not os.path.realpath(directory_path).startswith(os.path.realpath(STORAGE_DIR)):
                     conn.sendall(b"[!] Invalid directory path, upload failed.")
+                    logger.error(f"[!] Invalid directory '{directory_path}' submitted from {user}@{addr}.")
                 else:
                     # Create the directory if it doesn't exist
                     os.makedirs(directory_path, exist_ok=True) 
@@ -101,10 +103,14 @@ def handle_client(conn, addr):
                     file_exists = os.path.exists(file_path)
                     if not file_exists:
                         conn.sendall(b"[*] New file created and uploaded successfully.")
+                        logger.info(f"[*] {file_path} created and uploaded successfully from {username}@{addr}")
                     else:
                         conn.sendall(b"[*] File overwritten successfully.")
+                        logger.info(f"[*] {file_path} overwritten successfully by {username}@{addr}")
+
                 else:
                     conn.sendall(b"[!] File hash mismatch, upload failed.")
+                    logger.warning(f"[!] {file_path} hash mismatch from {username}@{addr}")
 
             elif command == 'DOWNLOAD':
                 
@@ -114,16 +120,18 @@ def handle_client(conn, addr):
                 # Input validation
                 if ".." in subdirectory_path.split(os.sep) or not subdirectory_path.startswith('egypt_server_storage'):
                     conn.sendall(b"[!] Restricted directory requested, download failed.")
+                    logger.warning(f"[!] Restricted directory requested from {username}@{addr}")
                 else:
                     directory_path = os.path.join(STORAGE_DIR, subdirectory_path)
             
                 # Check if the real path after normalization is within the allowed STORAGE_DIR
                 if not os.path.realpath(directory_path).startswith(os.path.realpath(STORAGE_DIR)):
                     conn.sendall(b"[!] Invalid directory path, download failed.")
+                    logger.warning(f"[!] Invalid directory requested from {username}@{addr}")
                 
                 file_name = args[0]
                 file_path = os.path.join(STORAGE_DIR, file_name)
-                logger.info(f"[*] Download to {addr}")
+                logger.info(f"[*] Download to {username}@{addr}")
 
                 # Get download data
                 if os.path.exists(file_path):
@@ -141,17 +149,17 @@ def handle_client(conn, addr):
                     conn.sendall(b"[!] File not found.")
 
             elif command == 'LIST':
-                # List the file details with CSV
                 list_results = list_files(STORAGE_DIR)
                 conn.sendall(list_results.encode('utf-8'))
+                logger.info(f"File list requested from {username}@{addr}")
 
             else:
                 conn.sendall(b"[!] Invalid command.")
 
     except Exception as e:
-        logger.error(f"[!] Error handling client {addr}: {e}")
+        logger.error(f"[!] Error handling client {username}@{addr}: {e}")
     finally:
-        logger.info(f"[-] Disconnection from {addr}")
+        logger.info(f"[-] Disconnection from {username}@{addr}")
         conn.close()
 
 def list_files(startpath):
@@ -166,6 +174,8 @@ def list_files(startpath):
     return "\n".join(files_found) if len(files_found) > 1 else "No files found in storage."
 
 def login(conn, addr):
+    username = ""
+    global username
     try:
         credentials = conn.recv(4096).decode('utf-8')
         if not credentials:
@@ -180,7 +190,7 @@ def login(conn, addr):
             logger.warning(f"[!] Authentication failed for {username}@{addr}.")
             conn.sendall(b"[!] Login failed.")
     except Exception as e:
-        logger.error(f"[!] Error handling login from {addr}: {e}")
+        logger.error(f"[!] Error handling login from {user}@{addr}: {e}")
         conn.sendall(b"[!] Login error.")
     return False
 
