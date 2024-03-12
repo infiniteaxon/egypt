@@ -20,7 +20,7 @@ Plans:
 
 
 
-**Images Below (Not from latest version):**
+**Images Below:**
 
 Server:
 - Logs
