@@ -64,16 +64,19 @@ def handle_client(conn, addr):
             command, *args = data.split()
 
             if command == 'UPLOAD':
-                subdirectory_path = STORAGE_DIR
+                subdirectory_path = STORAGE_DIR  # Default to the root storage directory
                 
                 if len(args) == 3:
                     file_name, file_size, client_file_hash = args
                 elif len(args) == 4:
                     subdirectory, file_name, file_size, client_file_hash = args
                     subdirectory_path = os.path.normpath(os.path.join(STORAGE_DIR, subdirectory))
-                
-                file_size = int(file_size)  # Ensure file_size is an integer
-                file_path = os.path.join(STORAGE_DIR, subdirectory_path, file_name)
+                else:
+                    # Send an error back to the client for incorrect number of arguments
+                    return
+            
+                file_size = int(file_size)  # Convert file_size to an integer
+                file_path = os.path.join(subdirectory_path, file_name)  # Construct the full file path
 
                 # Validate directory and create if necessary
                 if ".." in subdirectory_path.split(os.sep) or not subdirectory_path.startswith('egypt_server_storage'):
