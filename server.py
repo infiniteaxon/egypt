@@ -94,33 +94,33 @@ def handle_client(conn, addr):
                         # Create the directory if it doesn't exist
                         os.makedirs(directory_path, exist_ok=True) 
             
-                received_data = b''
-                received_size = 0
+                        received_data = b''
+                        received_size = 0
 
-                while received_size < file_size:
-                    chunk = conn.recv(min(4096, file_size - received_size))
-                    if not chunk:
-                        break
-                    received_data += chunk
-                    received_size += len(chunk)
+                        while received_size < file_size:
+                            chunk = conn.recv(min(4096, file_size - received_size))
+                            if not chunk:
+                                break
+                            received_data += chunk
+                            received_size += len(chunk)
 
-                # Check hash for integrity
-                server_file_hash = hash_file(received_data)
-                if server_file_hash == client_file_hash:
-                    with open(file_path, 'wb') as f:
-                        f.write(received_data)
-                    # Send responses
-                    file_exists = os.path.exists(file_path)
-                    if not file_exists:
-                        conn.sendall(b"[*] New file created and uploaded successfully.")
-                        logger.info(f"[*] {file_path} created and uploaded successfully from {username}@{addr}")
-                    else:
-                        conn.sendall(b"[*] File overwritten successfully.")
-                        logger.info(f"[*] {file_path} overwritten successfully by {username}@{addr}")
+                        # Check hash for integrity
+                        server_file_hash = hash_file(received_data)
+                        if server_file_hash == client_file_hash:
+                            with open(file_path, 'wb') as f:
+                                f.write(received_data)
+                            # Send responses
+                            file_exists = os.path.exists(file_path)
+                            if not file_exists:
+                                conn.sendall(b"[*] New file created and uploaded successfully.")
+                                logger.info(f"[*] {file_path} created and uploaded successfully from {username}@{addr}")
+                            else:
+                                conn.sendall(b"[*] File overwritten successfully.")
+                                logger.info(f"[*] {file_path} overwritten successfully by {username}@{addr}")
 
-                else:
-                    conn.sendall(b"[!] File hash mismatch, upload failed.")
-                    logger.warning(f"[!] {file_path} hash mismatch from {username}@{addr}")
+                        else:
+                            conn.sendall(b"[!] File hash mismatch, upload failed.")
+                            logger.warning(f"[!] {file_path} hash mismatch from {username}@{addr}")
 
             elif command == 'DOWNLOAD':
                 
