@@ -72,7 +72,7 @@ def handle_client(conn, addr):
                     subdirectory, file_name, file_size, client_file_hash = args
                     subdirectory_path = os.path.normpath(os.path.join(STORAGE_DIR, subdirectory))
                 else:
-                    # Send an error back to the client for incorrect number of arguments
+                    # Send an error back to the client for incorrect number of arguments?
                     return
             
                 file_size = int(file_size)  # Convert file_size to an integer
@@ -129,18 +129,18 @@ def handle_client(conn, addr):
                 # Input validation
                 if ".." in subdirectory_path.split(os.sep) or not subdirectory_path.startswith('egypt_server_storage'):
                     conn.sendall(b"[!] Restricted directory requested, download failed.")
-                    logger.warning(f"[!] Restricted directory requested from {username}@{addr}")
+                    logger.warning(f"[!] Restricted directory requested from {username}@{addr} - {subdirectory_path}")
                 else:
                     directory_path = os.path.join(STORAGE_DIR, subdirectory_path)
             
                 # Check if the real path after normalization is within the allowed STORAGE_DIR
                 if not os.path.realpath(directory_path).startswith(os.path.realpath(STORAGE_DIR)):
                     conn.sendall(b"[!] Invalid directory path, download failed.")
-                    logger.warning(f"[!] Invalid directory requested from {username}@{addr}")
+                    logger.warning(f"[!] Invalid directory requested from {username}@{addr} - {subdirectory_path}")
                 
                 file_name = args[0]
                 file_path = os.path.join(STORAGE_DIR, file_name)
-                logger.info(f"[*] Download to {username}@{addr}")
+                logger.info(f"[*] Download {file_name} to {username}@{addr}")
 
                 # Get download data
                 if os.path.exists(file_path):
@@ -187,7 +187,7 @@ def login(conn, addr):
     try:
         credentials = conn.recv(4096).decode('utf-8')
         if not credentials:
-            logger.warning(f"[!] Invalid client submission.")
+            logger.warning(f"[!] Invalid client submission from {addr}")
         username, password_hash = credentials.split(' ')
         
         if username in creds and creds[username] == password_hash:
@@ -198,7 +198,7 @@ def login(conn, addr):
             logger.warning(f"[!] Authentication failed for {username}@{addr}.")
             conn.sendall(b"[!] Login failed.")
     except Exception as e:
-        logger.error(f"[!] Error handling login from {user}@{addr}: {e}")
+        logger.error(f"[!] Error handling login from {username}@{addr}: {e}")
         conn.sendall(b"[!] Login error.")
     return False
 
