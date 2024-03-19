@@ -81,19 +81,18 @@ def handle_client(conn, addr):
                 # Validate directory and create if necessary
                 if ".." in subdirectory_path.split(os.sep) or not subdirectory_path.startswith('egypt_server_storage'):
                     conn.sendall(b"[!] Restricted directory submitted, upload failed.")
-                    logger.warning(f"[!] Restricted directory '{subdirectory_path}' submitted from {username}@{addr}.")
-                    break
+                    logger.warning(f"[!] Restricted directory '{file_path}' submitted from {username}@{addr}.")
+                    return
                 else:
                     directory_path = os.path.join(STORAGE_DIR, subdirectory_path)
-            
                 # Check if the real path after normalization is within the allowed STORAGE_DIR
-                if not os.path.realpath(directory_path).startswith(os.path.realpath(STORAGE_DIR)):
-                    conn.sendall(b"[!] Invalid directory path, upload failed.")
-                    logger.error(f"[!] Invalid directory '{subdirectory_path}' submitted from {username}@{addr}.")
-                    break
-                else:
-                    # Create the directory if it doesn't exist
-                    os.makedirs(directory_path, exist_ok=True) 
+                    if not os.path.realpath(directory_path).startswith(os.path.realpath(STORAGE_DIR)):
+                        conn.sendall(b"[!] Invalid directory path, upload failed.")
+                        logger.error(f"[!] Invalid directory '{file_path}' submitted from {username}@{addr}.")
+                        return
+                    else:
+                        # Create the directory if it doesn't exist
+                        os.makedirs(directory_path, exist_ok=True) 
             
                 received_data = b''
                 received_size = 0
