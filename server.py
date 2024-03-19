@@ -82,14 +82,12 @@ def handle_client(conn, addr):
                 if ".." in subdirectory_path.split(os.sep) or not subdirectory_path.startswith('egypt_server_storage'):
                     conn.sendall(b"[!] Restricted directory submitted, upload failed.")
                     logger.warning(f"[!] Restricted directory '{file_path}' submitted from {username}@{addr}.")
-                    return
                 else:
                     directory_path = os.path.join(STORAGE_DIR, subdirectory_path)
                 # Check if the real path after normalization is within the allowed STORAGE_DIR
                     if not os.path.realpath(directory_path).startswith(os.path.realpath(STORAGE_DIR)):
                         conn.sendall(b"[!] Invalid directory path, upload failed.")
                         logger.error(f"[!] Invalid directory '{file_path}' submitted from {username}@{addr}.")
-                        return
                     else:
                         # Create the directory if it doesn't exist
                         os.makedirs(directory_path, exist_ok=True) 
@@ -159,7 +157,7 @@ def handle_client(conn, addr):
                     conn.sendall(b"[!] File not found.")
 
             elif command == 'LIST':
-                list_results = list_files(STORAGE_DIR)
+                list_results = list_files()
                 conn.sendall(list_results.encode('utf-8'))
                 logger.info(f"[*] File list requested from {username}@{addr}")
 
@@ -172,12 +170,12 @@ def handle_client(conn, addr):
         logger.info(f"[-] Disconnection from {username}@{addr}")
         conn.close()
 
-def list_files(startpath):
+def list_files():
     files_found = ["Filename,Size (bytes),Created"]
-    for root, dirs, files in os.walk(startpath):
+    for root, dirs, files in os.walk(STORAGE_DIR):
         for file in files:
             file_path = os.path.join(root, file)
-            relative_path = os.path.relpath(file_path, startpath)
+            relative_path = os.path.relpath(file_path, STORAGE_DIR)
             file_size = os.path.getsize(file_path)
             creation_date = time.ctime(os.path.getctime(file_path))
             files_found.append(f"\"{relative_path}\",{file_size},\"{creation_date}\"")
