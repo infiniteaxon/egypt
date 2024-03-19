@@ -133,28 +133,28 @@ def handle_client(conn, addr):
                     directory_path = os.path.join(STORAGE_DIR, subdirectory_path)
             
                 # Check if the real path after normalization is within the allowed STORAGE_DIR
-                if not os.path.realpath(directory_path).startswith(os.path.realpath(STORAGE_DIR)):
-                    conn.sendall(b"[!] Invalid directory path, download failed.")
-                    logger.warning(f"[!] Invalid directory requested from {username}@{addr} - {subdirectory_path}")
-                
-                file_name = args[0]
-                file_path = os.path.join(STORAGE_DIR, file_name)
-                logger.info(f"[*] Download {file_name} to {username}@{addr}")
+                    if not os.path.realpath(directory_path).startswith(os.path.realpath(STORAGE_DIR)):
+                        conn.sendall(b"[!] Invalid directory path, download failed.")
+                        logger.warning(f"[!] Invalid directory requested from {username}@{addr} - {subdirectory_path}")
+                    else:
+                        file_name = args[0]
+                        file_path = os.path.join(STORAGE_DIR, file_name)
+                        logger.info(f"[*] Download {file_name} to {username}@{addr}")
 
-                # Get download data
-                if os.path.exists(file_path):
-                    with open(file_path, 'rb') as f:
-                        file_data = f.read()
+                        # Get download data
+                        if os.path.exists(file_path):
+                            with open(file_path, 'rb') as f:
+                                file_data = f.read()
 
-                    server_file_hash = hash_file(file_data)
-                    file_size = len(file_data)
-                    conn.sendall(f"{file_size} {server_file_hash}".encode('utf-8'))
+                            server_file_hash = hash_file(file_data)
+                            file_size = len(file_data)
+                            conn.sendall(f"{file_size} {server_file_hash}".encode('utf-8'))
 
-                    # Send the file content in chunks
-                    for i in range(0, len(file_data), 4096):
-                        conn.sendall(file_data[i:i+4096])
-                else:
-                    conn.sendall(b"[!] File not found.")
+                            # Send the file content in chunks
+                            for i in range(0, len(file_data), 4096):
+                                conn.sendall(file_data[i:i+4096])
+                        else:
+                            conn.sendall(b"[!] File not found.")
 
             elif command == 'LIST':
                 list_results = list_files()
