@@ -7,17 +7,17 @@ import time
 import logging
 
 # Server settings
-HOST = '0.0.0.0'  # Listen on all network interfaces
-PORT = 32603       # Port to listen on (non-privileged ports are > 1023)
+HOST = '0.0.0.0'
+PORT = 32603
 
-# SSL Stuff
+# SSL configuration
 CERTFILE = 'server.crt'
 KEYFILE = 'server.key'
 
-# User/Password Dictionary
+# User credentials dictionary
 creds = {"axon": "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"}
 
-# Directory to store received files
+# Directory for storing received files
 STORAGE_DIR = 'egypt_server_storage'
 if not os.path.exists(STORAGE_DIR):
     os.makedirs(STORAGE_DIR)
@@ -41,8 +41,6 @@ console_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 logger.addHandler(console_handler)
 
-
-
 def hash_file(file_data):
     sha256_hash = hashlib.sha256()
     sha256_hash.update(file_data)
@@ -50,8 +48,9 @@ def hash_file(file_data):
 
 def handle_client(conn, addr):
     logger.info(f"[+] Connection from {addr}")
-    
-    if not login(conn, addr):
+
+    username = login(conn, addr)
+    if not username:
         conn.close()
         return
 
@@ -62,115 +61,127 @@ def handle_client(conn, addr):
                 break
 
             command, *args = data.split()
-
+            # Commands now pass `username` to ensure proper logging and functionality
             if command == 'UPLOAD':
-                subdirectory_path = STORAGE_DIR  # Default to the root storage directory
-                
-                if len(args) == 3:
-                    file_name, file_size, client_file_hash = args
-                elif len(args) == 4:
-                    subdirectory, file_name, file_size, client_file_hash = args
-                    subdirectory_path = os.path.normpath(os.path.join(STORAGE_DIR, subdirectory))
-                else:
-                    # Send an error back to the client for incorrect number of arguments?
-                    return
-            
-                file_size = int(file_size)  # Convert file_size to an integer
-                file_path = os.path.join(subdirectory_path, file_name)  # Construct the full file path
-
-                # Validate directory and create if necessary
-                if ".." in subdirectory_path.split(os.sep) or not subdirectory_path.startswith('egypt_server_storage'):
-                    conn.sendall(b"[!] Restricted directory submitted, upload failed.")
-                    logger.warning(f"[!] Restricted directory '{file_path}' submitted from {username}@{addr}.")
-                else:
-                    directory_path = os.path.join(STORAGE_DIR, subdirectory_path)
-                # Check if the real path after normalization is within the allowed STORAGE_DIR
-                    if not os.path.realpath(directory_path).startswith(os.path.realpath(STORAGE_DIR)):
-                        conn.sendall(b"[!] Invalid directory path, upload failed.")
-                        logger.error(f"[!] Invalid directory '{file_path}' submitted from {username}@{addr}.")
-                    else:
-                        # Create the directory if it doesn't exist
-                        os.makedirs(directory_path, exist_ok=True) 
-            
-                        received_data = b''
-                        received_size = 0
-
-                        while received_size < file_size:
-                            chunk = conn.recv(min(4096, file_size - received_size))
-                            if not chunk:
-                                break
-                            received_data += chunk
-                            received_size += len(chunk)
-
-                        # Check hash for integrity
-                        server_file_hash = hash_file(received_data)
-                        if server_file_hash == client_file_hash:
-                            with open(file_path, 'wb') as f:
-                                f.write(received_data)
-                            # Send responses
-                            file_exists = os.path.exists(file_path)
-                            if not file_exists:
-                                conn.sendall(b"[*] New file created and uploaded successfully.")
-                                logger.info(f"[*] {file_path} created and uploaded successfully from {username}@{addr}")
-                            else:
-                                conn.sendall(b"[*] File overwritten successfully.")
-                                logger.info(f"[*] {file_path} overwritten successfully by {username}@{addr}")
-
-                        else:
-                            conn.sendall(b"[!] File hash mismatch, upload failed.")
-                            logger.warning(f"[!] {file_path} hash mismatch from {username}@{addr}")
-
+                upload(conn, args, username, addr)
             elif command == 'DOWNLOAD':
-                
-                file_name = args[0]
-                subdirectory_path = os.path.join(STORAGE_DIR, file_name)
-                
-                # Input validation
-                if ".." in subdirectory_path.split(os.sep) or not subdirectory_path.startswith('egypt_server_storage'):
-                    conn.sendall(b"[!] Restricted directory requested, download failed.")
-                    logger.warning(f"[!] Restricted directory requested from {username}@{addr} - {subdirectory_path}")
-                else:
-                    directory_path = os.path.join(STORAGE_DIR, subdirectory_path)
-            
-                # Check if the real path after normalization is within the allowed STORAGE_DIR
-                    if not os.path.realpath(directory_path).startswith(os.path.realpath(STORAGE_DIR)):
-                        conn.sendall(b"[!] Invalid directory path, download failed.")
-                        logger.warning(f"[!] Invalid directory requested from {username}@{addr} - {subdirectory_path}")
-                    else:
-                        file_name = args[0]
-                        file_path = os.path.join(STORAGE_DIR, file_name)
-                        logger.info(f"[*] Download {file_name} to {username}@{addr}")
-
-                        # Get download data
-                        if os.path.exists(file_path):
-                            with open(file_path, 'rb') as f:
-                                file_data = f.read()
-
-                            server_file_hash = hash_file(file_data)
-                            file_size = len(file_data)
-                            conn.sendall(f"{file_size} {server_file_hash}".encode('utf-8'))
-
-                            # Send the file content in chunks
-                            for i in range(0, len(file_data), 4096):
-                                conn.sendall(file_data[i:i+4096])
-                        else:
-                            conn.sendall(b"[!] File not found.")
-
+                download(conn, args, username, addr)
             elif command == 'LIST':
-                list_results = list_files()
-                conn.sendall(list_results.encode('utf-8'))
-                logger.info(f"[*] File list requested from {username}@{addr}")
-
+                file_list(conn, username, addr)
             else:
                 conn.sendall(b"[!] Invalid command.")
-
     except Exception as e:
         logger.error(f"[!] Error handling client {username}@{addr}: {e}")
     finally:
         logger.info(f"[-] Disconnection from {username}@{addr}")
         conn.close()
 
-def list_files():
+def login(conn, addr):
+    try:
+        credentials = conn.recv(4096).decode('utf-8')
+        if not credentials:
+            logger.warning(f"[!] Invalid client submission from {addr}")
+            return None
+        username, password_hash = credentials.split(' ')
+        if username in creds and creds[username] == password_hash:
+            logger.info(f"[+] {username}@{addr} authenticated successfully.")
+            conn.sendall(b"[+] Login successful.")
+            return username
+        else:
+            logger.warning(f"[!] Authentication failed for {username}@{addr}.")
+            conn.sendall(b"[!] Login failed.")
+            return None
+    except Exception as e:
+        logger.error(f"[!] Error during login: {e}")
+        conn.sendall(b"[!] Login error.")
+        return None
+
+def upload(conn, args, username, addr):
+    
+    subdirectory_path = STORAGE_DIR
+    
+    if len(args) == 3:
+        file_name, file_size, client_file_hash = args
+    elif len(args) == 4:
+        subdirectory, file_name, file_size, client_file_hash = args
+        subdirectory_path = os.path.normpath(os.path.join(STORAGE_DIR, subdirectory))
+    else:
+        # Send an error for incorrect number of arguments?
+        return
+    
+    # Input validation and directory check
+    subdirectory_path = os.path.normpath(os.path.join(STORAGE_DIR, subdirectory))
+    is_valid, response = validate_directory(subdirectory_path, STORAGE_DIR)
+    if not is_valid:
+        conn.sendall(response.encode('utf-8'))
+        logger.error(f"{response} from {username}@{addr}")
+        return
+
+    file_size = int(file_size) # Convert file size to int
+    file_path = os.path.join(response, file_name)  # Construct the full file path
+
+    # Create the directory if it doesn't exist
+    os.makedirs(response, exist_ok=True) 
+
+    received_data = b''
+    received_size = 0
+
+    while received_size < file_size:
+        chunk = conn.recv(min(4096, file_size - received_size))
+        if not chunk:
+            break
+        received_data += chunk
+        received_size += len(chunk)
+
+    # Check hash for integrity
+    server_file_hash = hash_file(received_data)
+    if server_file_hash == client_file_hash:
+        with open(file_path, 'wb') as f:
+            f.write(received_data)
+        # Send responses
+        file_exists = os.path.exists(file_path)
+        if not file_exists:
+            conn.sendall(b"[*] New file created and uploaded successfully.")
+            logger.info(f"[*] {file_path} created and uploaded successfully from {username}@{addr}")
+        else:
+            conn.sendall(b"[*] File overwritten successfully.")
+            logger.info(f"[*] {file_path} overwritten successfully by {username}@{addr}")
+
+    else:
+        conn.sendall(b"[!] File hash mismatch, upload failed.")
+        logger.warning(f"[!] {file_path} hash mismatch from {username}@{addr}")
+
+def download(conn, args, username, addr):
+    file_name = args[0]
+    subdirectory_path = os.path.join(STORAGE_DIR, file_name)
+    
+    # Input validation and directory check
+    is_valid, response = validate_directory(subdirectory_path, STORAGE_DIR)
+    if not is_valid:
+        conn.sendall(response.encode('utf-8'))
+        logger.error(f"{response} from {username}@{addr}")
+        return
+
+    file_name = args[0]
+    file_path = response
+    logger.info(f"[*] Download {file_name} to {username}@{addr}")
+
+    # Get download data
+    if os.path.exists(file_path):
+        with open(file_path, 'rb') as f:
+            file_data = f.read()
+
+        server_file_hash = hash_file(file_data)
+        file_size = len(file_data)
+        conn.sendall(f"{file_size} {server_file_hash}".encode('utf-8'))
+
+        # Send the file content in chunks
+        for i in range(0, len(file_data), 4096):
+            conn.sendall(file_data[i:i+4096])
+    else:
+        conn.sendall(b"[!] File not found.")
+
+def file_list(conn, username, addr):
     files_found = ["Filename,Size (bytes),Created"]
     for root, dirs, files in os.walk(STORAGE_DIR):
         for file in files:
@@ -179,27 +190,21 @@ def list_files():
             file_size = os.path.getsize(file_path)
             creation_date = time.ctime(os.path.getctime(file_path))
             files_found.append(f"\"{relative_path}\",{file_size},\"{creation_date}\"")
-    return "\n".join(files_found) if len(files_found) > 1 else "No files found in storage."
+    list_results = "\n".join(files_found) if len(files_found) > 1 else "No files found in storage."
+    conn.sendall(list_results.encode('utf-8'))
+    logger.info(f"[*] File list requested from {username}@{addr}")
 
-def login(conn, addr):
-    global username
-    try:
-        credentials = conn.recv(4096).decode('utf-8')
-        if not credentials:
-            logger.warning(f"[!] Invalid client submission from {addr}")
-        username, password_hash = credentials.split(' ')
-        
-        if username in creds and creds[username] == password_hash:
-            logger.info(f"[+] {username}@{addr} authenticated successfully.")
-            conn.sendall(b"[+] Login successful.")
-            return True
-        else:
-            logger.warning(f"[!] Authentication failed for {username}@{addr}.")
-            conn.sendall(b"[!] Login failed.")
-    except Exception as e:
-        logger.error(f"[!] Error handling login from {username}@{addr}: {e}")
-        conn.sendall(b"[!] Login error.")
-    return False
+def validate_directory(subdirectory_path, storage_dir):
+    # Normalize and resolve the absolute path upfront
+    normalized_path = os.path.normpath(os.path.join(storage_dir, subdirectory_path))
+    absolute_path = os.path.realpath(normalized_path)
+
+    # Explicitly check for directory traversal attempts by examining the normalized path
+    if ".." in normalized_path.split(os.sep) or not absolute_path.startswith(os.path.realpath(storage_dir)):
+        return False, "[!] Access to the requested directory is restricted or outside of the designated storage area."
+    
+    # The path is valid and within the storage directory
+    return True, absolute_path
 
 def main():
     context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
