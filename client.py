@@ -1,9 +1,6 @@
 import socket
 import os
 import hashlib
-from cryptography.fernet import Fernetimport socket
-import os
-import hashlib
 from cryptography.fernet import Fernet
 import base64
 import sys
