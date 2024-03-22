@@ -197,7 +197,7 @@ def file_list(conn, username, addr):
     conn.sendall(list_results.encode('utf-8'))
     logger.info(f"[*] File list requested from {username}@{addr}")
 
-def validate_directory(subdirectory_path):
+def validate_directory(subdirectory_path, STORAGE_DIR):
     # Normalize and resolve the absolute path upfront
     normalized_path = os.path.normpath(os.path.join(STORAGE_DIR, subdirectory_path))
     absolute_path = os.path.realpath(normalized_path)
