@@ -65,23 +65,22 @@ def download_file(ssock, file_path):
     ssock.sendall(f"DOWNLOAD {file_path}".encode('utf-8'))
     
     # Handle server response for file download
-    response = ssock.recv(1024).decode('utf-8')
-    if not response:
+    metadata = ssock.recv(1024).decode('utf-8')
+    if not metadata:
         print("[-] Server closed the connection.")
         return
-    response_parts = response.split()
-    if len(response_parts) == 4:
-        print(response)
-    elif len(response_parts) != 2:
-        print("[!] Invalid response from server.")
+    
+    metadata_parts = metadata.split(' ', 1)
+    if len(metadata_parts) != 2:
+        print(f"[!] Invalid response from server: {metadata}")
         return
     
-    file_size, server_file_hash = int(response_parts[0]), response_parts[1]
-    
-    # Adjusting local file path to include subdirectory
-    local_file_path = os.path.join(CLIENT_DIR, os.path.basename(file_path))
-    os.makedirs(os.path.dirname(local_file_path), exist_ok=True)
-    
+    try:
+        file_size, server_file_hash = int(metadata_parts[0]), metadata_parts[1]
+    except ValueError:
+        print("[!] Invalid file size received from server.")
+        return
+
     # Receive file content
     received_data = b''
     while len(received_data) < file_size:
@@ -98,10 +97,11 @@ def download_file(ssock, file_path):
     
     # Decrypt and save the file
     decrypted_data = decrypt_file(received_data)
+    local_file_path = os.path.join(CLIENT_DIR, os.path.basename(file_path))
+    os.makedirs(os.path.dirname(local_file_path), exist_ok=True)
     with open(local_file_path, 'wb') as file:
         file.write(decrypted_data)
     print("[+] File downloaded and decrypted successfully.")
-
 
 def request_file_list(ssock):
     try:
@@ -169,7 +169,7 @@ def main():
                     clear()
                 elif choice == '2':
                     request_file_list(ssock)
-                    file_name = input("\nEnter the filename to download: ")
+                    file_name = input("\nEnter the filename to download (as displayed): ")
                     download_file(ssock, file_name)
                     clear()
                 elif choice == '3':
