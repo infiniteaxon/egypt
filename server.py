@@ -154,7 +154,7 @@ def upload(conn, args, username, addr):
 
 def download(conn, args, username, addr):
     if len(args) != 1:
-        conn.sendall(b"[!] Error processing download request.")
+        conn.sendall(b"[!] Incorrect number of arguments for download.")
         logger.error(f"[!] Incorrect number of arguments for download from {username}@{addr}")
         return
 
@@ -168,7 +168,8 @@ def download(conn, args, username, addr):
         logger.error(f"{response} from {username}@{addr}")
         return
 
-    file_path = response  # The validated path is used as the file path.
+    # The validated path is used as the file path
+    file_path = os.path.join(STORAGE_DIR, file_name)
     logger.info(f"[*] Download {file_name} to {username}@{addr}")
 
     # Get download data
@@ -178,14 +179,15 @@ def download(conn, args, username, addr):
 
         server_file_hash = hash_file(file_data)
         file_size = len(file_data)
+        # Send the file size and hash before sending the file content
         metadata = f"{file_size} {server_file_hash}"
-        conn.sendall(metadata.encode('utf-8'))  # Send the size and hash before file content.
-
-        # Send the file content in chunks
-        for i in range(0, len(file_data), 4096):
-            conn.sendall(file_data[i:i + 4096])
+        conn.sendall(metadata.encode('utf-8'))
+        time.sleep(0.1)  
+        # Wait and send the file content in chunks
+        conn.sendall(file_data)
     else:
         conn.sendall(b"[!] File not found.")
+
 
 def file_list(conn, username, addr):
     files_found = ["Filename,Size (bytes),Created"]
