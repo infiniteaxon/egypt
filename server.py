@@ -99,6 +99,7 @@ def login(conn, addr):
 def upload(conn, args, username, addr):
     
     subdirectory_path = STORAGE_DIR
+    subdirectory = ''
     
     if len(args) == 3:
         file_name, file_size, client_file_hash = args
