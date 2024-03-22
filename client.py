@@ -65,16 +65,16 @@ def download_file(ssock, file_path):
     ssock.sendall(f"DOWNLOAD {file_path}".encode('utf-8'))
     
     # Handle server response for file download
-    header = ssock.recv(1024).decode('utf-8')
-    if not header:
+    response = ssock.recv(1024).decode('utf-8')
+    if not response:
         print("[-] Server closed the connection.")
         return
-    header_parts = header.split()
-    if len(header_parts) != 2:
+    response_parts = response.split(' ')
+    if len(response_parts) != 2:
         print("[!] Invalid response from server.")
         return
     
-    file_size, server_file_hash = int(header_parts[0]), header_parts[1]
+    file_size, server_file_hash = int(response_parts[0]), response_parts[1]
     
     # Adjusting local file path to include subdirectory
     local_file_path = os.path.join(CLIENT_DIR, os.path.basename(file_path))
