@@ -105,7 +105,6 @@ def upload(conn, args, username, addr):
         file_name, file_size, client_file_hash = args
     elif len(args) == 4:
         subdirectory, file_name, file_size, client_file_hash = args
-        subdirectory_path = os.path.normpath(os.path.join(STORAGE_DIR, subdirectory))
     else:
         # Send an error for incorrect number of arguments?
         return
@@ -159,18 +158,13 @@ def download(conn, args, username, addr):
         return
 
     file_name = args[0]
-    subdirectory_path = os.path.join(STORAGE_DIR, file_name)
     
     # Input validation and directory check
-    is_valid, response = validate_directory(subdirectory_path, STORAGE_DIR)
+    is_valid, file_path = validate_directory(file_name, STORAGE_DIR)
     if not is_valid:
-        conn.sendall(response.encode('utf-8'))
-        logger.error(f"{response} from {username}@{addr}")
+        conn.sendall(file_path.encode('utf-8'))  # file_path contains the error message
+        logger.error(f"{file_path} from {username}@{addr}")
         return
-
-    # The validated path is used as the file path
-    file_path = os.path.join(STORAGE_DIR, file_name)
-    logger.info(f"[*] Download {file_name} to {username}@{addr}")
 
     # Get download data
     if os.path.exists(file_path):
@@ -182,12 +176,13 @@ def download(conn, args, username, addr):
         # Send the file size and hash before sending the file content
         metadata = f"{file_size} {server_file_hash}"
         conn.sendall(metadata.encode('utf-8'))
-        time.sleep(0.1)  
-        # Wait and send the file content in chunks
+        
+        # Send the file content
         conn.sendall(file_data)
+        logger.info(f"[*] File {file_name} sent to {username}@{addr}")
     else:
         conn.sendall(b"[!] File not found.")
-
+        logger.warning(f"[!] File {file_name} not found for {username}@{addr}")
 
 def file_list(conn, username, addr):
     files_found = ["Filename,Size (bytes),Created"]
@@ -202,13 +197,13 @@ def file_list(conn, username, addr):
     conn.sendall(list_results.encode('utf-8'))
     logger.info(f"[*] File list requested from {username}@{addr}")
 
-def validate_directory(subdirectory_path, storage_dir):
+def validate_directory(subdirectory_path):
     # Normalize and resolve the absolute path upfront
-    normalized_path = os.path.normpath(os.path.join(storage_dir, subdirectory_path))
+    normalized_path = os.path.normpath(os.path.join(STORAGE_DIR, subdirectory_path))
     absolute_path = os.path.realpath(normalized_path)
 
-    # Explicitly check for directory traversal attempts by examining the normalized path
-    if ".." in normalized_path.split(os.sep) or not absolute_path.startswith(os.path.realpath(storage_dir)):
+    # Check for directory traversal attempts by examining the normalized path
+    if ".." in normalized_path.split(os.sep) or not absolute_path.startswith(os.path.realpath(STORAGE_DIR)):
         return False, "[!] Access to the requested directory is restricted or outside of the designated storage area."
     
     # The path is valid and within the storage directory
