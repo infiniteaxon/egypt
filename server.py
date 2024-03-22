@@ -97,8 +97,6 @@ def login(conn, addr):
         return None
 
 def upload(conn, args, username, addr):
-    
-    subdirectory_path = STORAGE_DIR
     subdirectory = ''
     
     if len(args) == 3:
@@ -110,8 +108,7 @@ def upload(conn, args, username, addr):
         return
     
     # Input validation and directory check
-    subdirectory_path = os.path.normpath(os.path.join(STORAGE_DIR, subdirectory))
-    is_valid, response = validate_directory(subdirectory_path, STORAGE_DIR)
+    is_valid, response = validate_directory(STORAGE_DIR, subdirectory)
     if not is_valid:
         conn.sendall(response.encode('utf-8'))
         logger.error(f"{response} from {username}@{addr}")
@@ -197,9 +194,9 @@ def file_list(conn, username, addr):
     conn.sendall(list_results.encode('utf-8'))
     logger.info(f"[*] File list requested from {username}@{addr}")
 
-def validate_directory(subdirectory_path, STORAGE_DIR):
+def validate_directory(STORAGE_DIR, subdirectory):
     # Normalize and resolve the absolute path upfront
-    normalized_path = os.path.normpath(os.path.join(STORAGE_DIR, subdirectory_path))
+    normalized_path = os.path.normpath(os.path.join(STORAGE_DIR, subdirectory))
     absolute_path = os.path.realpath(normalized_path)
 
     # Check for directory traversal attempts by examining the normalized path
