@@ -1,6 +1,9 @@
 import socket
 import os
 import hashlib
+from cryptography.fernet import Fernetimport socket
+import os
+import hashlib
 from cryptography.fernet import Fernet
 import base64
 import sys
@@ -65,19 +68,19 @@ def download_file(ssock, file_path):
     ssock.sendall(f"DOWNLOAD {file_path}".encode('utf-8'))
     
     # Handle server response for file download
-    response = ssock.recv(1024).decode('utf-8')
-    if not response:
+    header = ssock.recv(1024).decode('utf-8')
+    if not header:
         print("[-] Server closed the connection.")
         return
-    response_parts = response.split()
-    if len(response_parts) != 2:
+    header_parts = header.split()
+    if len(header_parts) != 2:
         print("[!] Invalid response from server.")
         return
     
-    file_size, server_file_hash = int(response_parts[0]), response_parts[1]
+    file_size, server_file_hash = int(header_parts[0]), header_parts[1]
     
     # Adjusting local file path to include subdirectory
-    local_file_path = os.path.join(CLIENT_DIR, file_path.replace("/", os.sep))
+    local_file_path = os.path.join(CLIENT_DIR, os.path.basename(file_path))
     os.makedirs(os.path.dirname(local_file_path), exist_ok=True)
     
     # Receive file content
@@ -99,6 +102,7 @@ def download_file(ssock, file_path):
     with open(local_file_path, 'wb') as file:
         file.write(decrypted_data)
     print("[+] File downloaded and decrypted successfully.")
+
 
 def request_file_list(ssock):
     try:
