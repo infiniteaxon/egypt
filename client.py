@@ -70,8 +70,8 @@ def download_file(ssock, file_path):
         print("[-] Server closed the connection.")
         return
     response_parts = response.split()
-    if len(response_parts) == 1:
-        print(response_parts)
+    if len(response_parts) == 4:
+        print(response)
     elif len(response_parts) != 2:
         print("[!] Invalid response from server.")
         return
