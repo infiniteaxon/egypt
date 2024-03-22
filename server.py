@@ -99,7 +99,6 @@ def login(conn, addr):
 def upload(conn, args, username, addr):
     
     subdirectory_path = STORAGE_DIR
-    subdirectory = ''
     
     if len(args) == 3:
         file_name, file_size, client_file_hash = args
@@ -153,6 +152,11 @@ def upload(conn, args, username, addr):
         logger.warning(f"[!] {file_path} hash mismatch from {username}@{addr}")
 
 def download(conn, args, username, addr):
+    if len(args) != 1:
+        conn.sendall(b"[!] Error processing download request.")
+        logger.error(f"[!] Incorrect number of arguments for download from {username}@{addr}")
+        return
+
     file_name = args[0]
     subdirectory_path = os.path.join(STORAGE_DIR, file_name)
     
@@ -163,8 +167,7 @@ def download(conn, args, username, addr):
         logger.error(f"{response} from {username}@{addr}")
         return
 
-    file_name = args[0]
-    file_path = response
+    file_path = response  # The validated path is used as the file path.
     logger.info(f"[*] Download {file_name} to {username}@{addr}")
 
     # Get download data
@@ -174,11 +177,12 @@ def download(conn, args, username, addr):
 
         server_file_hash = hash_file(file_data)
         file_size = len(file_data)
-        conn.sendall(f"{file_size} {server_file_hash}".encode('utf-8'))
+        header = f"{file_size} {server_file_hash}"
+        conn.sendall(header.encode('utf-8'))  # Send the size and hash before file content.
 
         # Send the file content in chunks
         for i in range(0, len(file_data), 4096):
-            conn.sendall(file_data[i:i+4096])
+            conn.sendall(file_data[i:i + 4096])
     else:
         conn.sendall(b"[!] File not found.")
 
