@@ -178,8 +178,8 @@ def download(conn, args, username, addr):
 
         server_file_hash = hash_file(file_data)
         file_size = len(file_data)
-        header = f"{file_size} {server_file_hash}"
-        conn.sendall(header.encode('utf-8'))  # Send the size and hash before file content.
+        metadata = f"{file_size} {server_file_hash}"
+        conn.sendall(metadata.encode('utf-8'))  # Send the size and hash before file content.
 
         # Send the file content in chunks
         for i in range(0, len(file_data), 4096):
