@@ -81,6 +81,8 @@ def login(conn, addr):
         credentials = conn.recv(4096).decode('utf-8')
         if not credentials:
             logger.warning(f"[!] Invalid client submission from {addr}")
+            conn.sendall(b"[!] Login failed. Exiting...")
+            conn.close()
             return None
         username, password_hash = credentials.split(' ')
         if username in creds and creds[username] == password_hash:
@@ -89,7 +91,8 @@ def login(conn, addr):
             return username
         else:
             logger.warning(f"[!] Authentication failed for {username}@{addr}.")
-            conn.sendall(b"[!] Login failed.")
+            conn.sendall(b"[!] Login failed. Exiting...")
+            conn.close()
             return None
     except Exception as e:
         logger.error(f"[!] Error during login: {e}")
