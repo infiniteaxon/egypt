@@ -13,8 +13,8 @@ from io import StringIO
 import getpass
 
 # Server settings
-SERVER_IP = 'x.x.x.x'
-SERVER_PORT = xxxxx
+SERVER_IP = '24.96.47.160'
+SERVER_PORT = 32603
 
 # Encryption password
 ENC_PASSWORD = getpass.getpass("[!] Input encryption password: ")
@@ -24,7 +24,7 @@ key = base64.urlsafe_b64encode(hashlib.sha256(ENC_PASSWORD.encode()).digest())
 cipher_suite = Fernet(key)
 
 # Directory to sync
-CLIENT_DIR = '/home/axon/egypt'
+CLIENT_DIR = '/home/kali/egypt'
 
 def hash_file(file_data):
     sha256_hash = hashlib.sha256()
