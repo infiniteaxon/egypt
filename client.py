@@ -59,7 +59,7 @@ def upload_file(ssock, file_name):
     
     response = ssock.recv(1024).decode('utf-8')
     print(response)
-    if "Restricted" in response:
+    if "restricted" in response:
         return True
 
 def download_file(ssock, file_path):
@@ -72,7 +72,8 @@ def download_file(ssock, file_path):
         print("[-] Server closed the connection.")
         return
     
-    if "Restricted" in metadata:
+    if "restricted" in metadata:
+        print(metadata)
         return True
     
     metadata_parts = metadata.split(' ', 1)
