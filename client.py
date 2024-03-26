@@ -24,7 +24,7 @@ key = base64.urlsafe_b64encode(hashlib.sha256(ENC_PASSWORD.encode()).digest())
 cipher_suite = Fernet(key)
 
 # Directory to sync
-CLIENT_DIR = '/home/axon/egypt'
+CLIENT_DIR = '/home/kali/egypt'
 
 def hash_file(file_data):
     sha256_hash = hashlib.sha256()
@@ -59,6 +59,8 @@ def upload_file(ssock, file_name):
     
     response = ssock.recv(1024).decode('utf-8')
     print(response)
+    if "Restricted" in response:
+        return True
 
 def download_file(ssock, file_path):
     # Request file
@@ -69,6 +71,9 @@ def download_file(ssock, file_path):
     if not metadata:
         print("[-] Server closed the connection.")
         return
+    
+    if "Restricted" in metadata:
+        return True
     
     metadata_parts = metadata.split(' ', 1)
     if len(metadata_parts) != 2:
@@ -165,12 +170,18 @@ def main():
 
                 if choice == '1':
                     file_name = input("Enter the filename to upload: ")
-                    upload_file(ssock, file_name)
+                    check = upload_file(ssock, file_name)
+                    if check == True:
+                        response = False
+                        break
                     clear()
                 elif choice == '2':
                     request_file_list(ssock)
                     file_name = input("\nEnter the filename to download (as displayed): ")
-                    download_file(ssock, file_name)
+                    check = download_file(ssock, file_name)
+                    if check == True:
+                        response = False
+                        break
                     clear()
                 elif choice == '3':
                     clear()
