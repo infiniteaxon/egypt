@@ -11,9 +11,9 @@ Features:
 - Download
 - List Stored Files
 - Allow Subdirectory Creation and Storage
-- Server Log
+- Server Log Stored Externally
 - Username / Password Auth
-- Store server logs in seperate file
+- Input Validation to prevent Directory Traversal
 
 Plans:
 - ???
