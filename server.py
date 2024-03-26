@@ -157,7 +157,7 @@ def download(conn, args, username, addr):
     file_name = args[0]
     
     # Input validation and directory check
-    is_valid, file_path = validate_directory(file_name, STORAGE_DIR)
+    is_valid, file_path = validate_directory(STORAGE_DIR, file_name)
     if not is_valid:
         conn.sendall(file_path.encode('utf-8'))  # file_path contains the error message
         logger.error(f"{file_path} from {username}@{addr}")
@@ -194,14 +194,15 @@ def file_list(conn, username, addr):
     conn.sendall(list_results.encode('utf-8'))
     logger.info(f"[*] File list requested from {username}@{addr}")
 
-def validate_directory(STORAGE_DIR, subdirectory):
+def validate_directory(STORAGE_DIR, path):
     # Normalize and resolve the absolute path upfront
-    normalized_path = os.path.normpath(os.path.join(STORAGE_DIR, subdirectory))
+    normalized_path = os.path.normpath(os.path.join(STORAGE_DIR, path))
     absolute_path = os.path.realpath(normalized_path)
+    print(absolute_path)
 
     # Check for directory traversal attempts by examining the normalized path
     if ".." in normalized_path.split(os.sep) or not absolute_path.startswith(os.path.realpath(STORAGE_DIR)):
-        return False, "[!] Access to the requested directory is restricted or outside of the designated storage area."
+        return False, f"[!] Access to {normalized_path} is restricted."
     
     # The path is valid and within the storage directory
     return True, absolute_path
