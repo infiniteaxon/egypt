@@ -24,7 +24,7 @@ key = base64.urlsafe_b64encode(hashlib.sha256(ENC_PASSWORD.encode()).digest())
 cipher_suite = Fernet(key)
 
 # Directory to sync
-CLIENT_DIR = '/home/kali/egypt'
+CLIENT_DIR = '/home/axon/egypt'
 
 def hash_file(file_data):
     sha256_hash = hashlib.sha256()
