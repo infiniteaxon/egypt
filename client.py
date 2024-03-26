@@ -153,9 +153,9 @@ def main():
         with context.wrap_socket(sock, server_hostname=SERVER_IP) as ssock:
             print(f"[+] Securely connected to server at {SERVER_IP}:{SERVER_PORT}")
             
-            login(ssock)
+            response = login(ssock)
 
-            while True:
+            while response == True:
                 print("\nAvailable options:")
                 print("1. Upload file")
                 print("2. Download file")
