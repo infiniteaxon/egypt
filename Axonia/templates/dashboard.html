@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Dashboard</h2>
+<h4>Available Files</h4>
+{% if files %}
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Filename</th>
+      <th>Size (bytes)</th>
+      <th>Created</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for file in files %}
+    <tr>
+      <td>{{ file.filename }}</td>
+      <td>{{ file.size }}</td>
+      <td>{{ file.created }}</td>
+      <td>
+        <a href="{{ url_for('download', filename=file.filename) }}" class="btn btn-sm btn-success">Download</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p>No files found.</p>
+{% endif %}
+{% endblock %}
